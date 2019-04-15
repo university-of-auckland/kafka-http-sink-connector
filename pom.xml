@@ -16,6 +16,21 @@
         <java.version>1.8</java.version>
     </properties>
 
+    <scm>
+        <url>https://stash.auckland.ac.nz/projects/IMA/repos/kafka-http-sink-connector</url>
+        <connection>scm:git:git@stash.auckland.ac.nz/ima/kafka-http-sink-connector.git</connection>
+        <developerConnection>scm:git:git@stash.auckland.ac.nz/ima/kafka-http-sink-connector.git</developerConnection>
+        <tag>HEAD</tag>
+    </scm>
+
+    <distributionManagement>
+        <repository>
+            <id>uoa-releases</id>
+            <name>UOA Release Repository</name>
+            <url>https://nexus.auckland.ac.nz/nexus/content/repositories/releases</url>
+        </repository>
+    </distributionManagement>
+
     <dependencies>
         <dependency>
             <groupId>org.apache.kafka</groupId>
@@ -82,6 +97,22 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>2.5.2</version>
+                <configuration>
+                    <pushChanges>false</pushChanges>
+                    <localCheckout>true</localCheckout>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.maven.shared</groupId>
+                        <artifactId>maven-invoker</artifactId>
+                        <version>2.2</version>
+                    </dependency>
+                </dependencies>
             </plugin>
         </plugins>
         <resources>
