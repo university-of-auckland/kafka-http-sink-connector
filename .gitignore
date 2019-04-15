@@ -1,0 +1,26 @@
+/target/
+
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+# Sensitive Files
+.private
+secrets
+
+# Large Files
+data
+.RData
+.Rproj.user
