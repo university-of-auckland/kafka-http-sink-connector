@@ -14,10 +14,10 @@ public class ExceptionStrategyHandlerFactory {
 
     public static ExceptionHandler getInstance(HttpSinkConnectorConfig config, SinkTaskContext context){
         switch(config.exceptionStrategy){
-            case PROGRESS_BACK_OFF_DROP_MESSAGE: return new ProgressiveBackoffDropStrategyHandler(config,context);
+            case PROGRESS_BACK_OFF_DROP_MESSAGE: return new ProgressiveBackoffDropHandler(config,context);
             case PROGRESS_BACK_OFF_STOP_TASK: return new ProgressiveBackoffStopTaskHandler(config,context);
-            case DROP_MESSAGE: return new DropMessageStrategyHandler(context);
-            case STOP_TASK: return new StopTaskStrategyHandler();
+            case DROP_MESSAGE: return new DropMessageHandler(context);
+            case STOP_TASK: return new StopTaskHandler();
             default: throw new StrategyNotFoundException();
         }
     }

@@ -5,23 +5,28 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 
-public class ApiRequest {
+public class ApiRequest implements Request{
 
-    private static final String REQUEST_HEADER_CORRELATION_ID_KEY = "X-API-Correlation-Id";
-    private HttpURLConnection connection;
+    public static final String REQUEST_HEADER_CORRELATION_ID_KEY = "X-API-Correlation-Id";
+    public static final String REQUEST_HEADER_KAFKA_TOPIC_KEY = "X-Kafka-Topic";
     private final static String STREAM_ENCODING = "UTF-8";
+    private HttpURLConnection connection;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     private KafkaRecord kafkaRecord;
 
 
-    ApiRequest(HttpURLConnection connection, KafkaRecord kafkaRecord) {
+    public ApiRequest(HttpURLConnection connection, KafkaRecord kafkaRecord) {
         this.connection = connection;
         this.kafkaRecord = kafkaRecord;
     }
 
+    @Override
     public ApiRequest setHeaders(String headers, String headerSeparator) {
         log.info("Processing headers: headerSeparator={}", headerSeparator);
         for (String headerKeyValue : headers.split(headerSeparator)) {
@@ -33,7 +38,13 @@ public class ApiRequest {
             }
         }
         addCorrelationIdHeader();
+        addTopicHeader();
         return this;
+    }
+
+    private void addTopicHeader() {
+        log.info("Adding topic header: {} = {} ",REQUEST_HEADER_KAFKA_TOPIC_KEY, kafkaRecord.getTopic());
+        connection.setRequestProperty(REQUEST_HEADER_KAFKA_TOPIC_KEY, kafkaRecord.getTopic());
     }
 
     private void addCorrelationIdHeader() {
@@ -42,6 +53,7 @@ public class ApiRequest {
         connection.setRequestProperty(REQUEST_HEADER_CORRELATION_ID_KEY, correlationId);
     }
 
+    @Override
     public void sendPayload(String payload) {
         try(OutputStreamWriter writer = new OutputStreamWriter(connection.getOutputStream(), STREAM_ENCODING)){
             writer.write(payload);

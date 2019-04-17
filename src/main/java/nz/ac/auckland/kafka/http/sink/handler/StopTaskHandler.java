@@ -5,10 +5,10 @@ import org.apache.kafka.connect.errors.ConnectException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class StopTaskStrategyHandler implements ExceptionHandler{
+public class StopTaskHandler implements ExceptionHandler{
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
-    public StopTaskStrategyHandler() {
+    public StopTaskHandler() {
         log.info("Exception strategy: Stop task strategy.");
     }
 

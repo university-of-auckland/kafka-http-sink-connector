@@ -5,11 +5,11 @@ import org.apache.kafka.connect.sink.SinkTaskContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DropMessageStrategyHandler implements ExceptionHandler {
+public class DropMessageHandler implements ExceptionHandler {
     private final SinkTaskContext sinkContext;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
-    public DropMessageStrategyHandler(SinkTaskContext context) {
+    public DropMessageHandler(SinkTaskContext context) {
         log.info("Exception strategy: Drop message Strategy.");
         this.sinkContext = context;
     }

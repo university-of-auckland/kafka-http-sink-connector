@@ -3,7 +3,7 @@ package nz.ac.auckland.kafka.http.sink.request;
 import nz.ac.auckland.kafka.http.sink.HttpSinkConnectorConfig;
 import nz.ac.auckland.kafka.http.sink.handler.ExceptionHandler;
 import nz.ac.auckland.kafka.http.sink.handler.ExceptionStrategyHandlerFactory;
-import nz.ac.auckland.kafka.http.sink.handler.StopTaskStrategyHandler;
+import nz.ac.auckland.kafka.http.sink.handler.StopTaskHandler;
 import nz.ac.auckland.kafka.http.sink.model.KafkaRecord;
 import org.apache.kafka.connect.sink.SinkRecord;
 import org.apache.kafka.connect.sink.SinkTaskContext;
@@ -14,15 +14,25 @@ import java.util.Collection;
 
 public class ApiRequestInvoker {
 
-    private final ApiRequestBuilder apiRequestBuilder = new ApiRequestBuilder();
+    private final RequestBuilder requestBuilder;
     private final HttpSinkConnectorConfig config;
     private final SinkTaskContext sinkContext;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     private ExceptionHandler exceptionHandler;
 
     public ApiRequestInvoker(final HttpSinkConnectorConfig config, final SinkTaskContext context) {
+        log.info("Initializing ApiRequestInvoker");
         this.config = config;
         this.sinkContext = context;
+        this.requestBuilder = new ApiRequestBuilder();
+        setExceptionStrategy();
+    }
+
+    public ApiRequestInvoker(final HttpSinkConnectorConfig config,
+                             final SinkTaskContext context, RequestBuilder requestBuilder) {
+        this.config = config;
+        this.sinkContext = context;
+        this.requestBuilder = requestBuilder;
         setExceptionStrategy();
     }
 
@@ -36,13 +46,13 @@ public class ApiRequestInvoker {
     private void sendAPiRequest(SinkRecord record){
         KafkaRecord kafkaRecord = new KafkaRecord(record);
         try {
-            apiRequestBuilder.createRequest(config.httpApiUrl, config.requestMethod.toString(),kafkaRecord)
+            requestBuilder.createRequest(config.httpApiUrl, config.requestMethod.toString(),kafkaRecord)
                          .setHeaders(config.headers, config.headerSeparator)
                          .sendPayload(record.value().toString());
         }catch (ApiResponseErrorException e) {
             exceptionHandler.handel(e);
         }catch (ApiRequestErrorException e){
-            new StopTaskStrategyHandler().handel(e);
+            new StopTaskHandler().handel(e);
         }
     }
 

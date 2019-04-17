@@ -7,7 +7,7 @@ import org.apache.kafka.connect.sink.SinkTaskContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ProgressiveBackoffDropStrategyHandler implements ExceptionHandler {
+public class ProgressiveBackoffDropHandler implements ExceptionHandler {
     private static final int ADJUST_ZERO_ELEMENT = 1;
     private static final long MILLI_SEC_MULTIPLIER = 1000;
     int retryIndex = 0;
@@ -16,7 +16,7 @@ public class ProgressiveBackoffDropStrategyHandler implements ExceptionHandler {
     private final SinkTaskContext sinkContext;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
-    public ProgressiveBackoffDropStrategyHandler(HttpSinkConnectorConfig config, SinkTaskContext context) {
+    public ProgressiveBackoffDropHandler(HttpSinkConnectorConfig config, SinkTaskContext context) {
         log.info("Exception strategy: Progressive back-off drop Strategy retries={}.", config.retryBackoffsec);
         this.maxRetries = config.retryBackoffsec.length;
         this.retryBackoffsec = config.retryBackoffsec;
