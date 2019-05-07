@@ -18,9 +18,9 @@
     </properties>
 
     <scm>
-        <url>https://stash.auckland.ac.nz/projects/IMA/repos/kafka-http-sink-connector</url>
-        <connection>scm:git:git@stash.auckland.ac.nz/ima/kafka-http-sink-connector.git</connection>
-        <developerConnection>scm:git:git@stash.auckland.ac.nz/ima/kafka-http-sink-connector.git</developerConnection>
+        <url>https://stash.auckland.ac.nz/projects/IMA/repos/uoa-kafka-http-sink-connector</url>
+        <connection>scm:git:git@stash.auckland.ac.nz/ima/uoa-kafka-http-sink-connector.git</connection>
+        <developerConnection>scm:git:git@stash.auckland.ac.nz/ima/uoa-kafka-http-sink-connector.git</developerConnection>
         <tag>HEAD</tag>
     </scm>
 
