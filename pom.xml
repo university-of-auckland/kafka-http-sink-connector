@@ -1,10 +1,9 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>nz.ac.auckland</groupId>
     <artifactId>uoa-kafka-http-sink-connector</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
     <packaging>jar</packaging>
 
     <name>uoa-kafka-http-sink-connector</name>
@@ -21,7 +20,7 @@
         <url>https://stash.auckland.ac.nz/projects/IMA/repos/uoa-kafka-http-sink-connector</url>
         <connection>scm:git:git@stash.auckland.ac.nz/ima/uoa-kafka-http-sink-connector.git</connection>
         <developerConnection>scm:git:git@stash.auckland.ac.nz/ima/uoa-kafka-http-sink-connector.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>uoa-kafka-http-sink-connector-1.0.0</tag>
     </scm>
 
     <distributionManagement>
