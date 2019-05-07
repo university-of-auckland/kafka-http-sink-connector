@@ -8,26 +8,28 @@ import org.apache.kafka.connect.sink.SinkTaskContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
+
 public class ProgressiveBackoffStopTaskHandler implements ExceptionHandler {
     private static final int ADJUST_ZERO_ELEMENT = 1;
     private static final long MILLI_SEC_MULTIPLIER = 1000;
-    int retryIndex = 0;
-    int maxRetries;
-    String[] retryBackoffsec;
+    private int retryIndex = 0;
+    private int maxRetries;
+    private String[] retryBackoffsec;
     private final SinkTaskContext sinkContext;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
-    public ProgressiveBackoffStopTaskHandler(HttpSinkConnectorConfig config, SinkTaskContext context) {
-        log.info("Exception strategy: Progressive back-off stop Strategy retries={}.", config.retryBackoffsec);
+    ProgressiveBackoffStopTaskHandler(HttpSinkConnectorConfig config, SinkTaskContext context) {
         this.maxRetries = config.retryBackoffsec.length;
         this.retryBackoffsec = config.retryBackoffsec;
         this.sinkContext = context;
+        log.info("Exception strategy: Progressive back-off stop Strategy retries={}.", Arrays.toString(retryBackoffsec));
     }
 
     @Override
     public void handel(CallBackApiException e) {
         if (retryIndex >= maxRetries) {
-            log.error("Progressive back-off stop Strategy: Stopping the task after {} retries. Errored record: {}",maxRetries,e.getRecord());
+            log.error("Progressive back-off stop Strategy: Stopping the task after {} retries. \n Errored record: {}",maxRetries,e.getRecord());
             retryIndex = 0;
             throw new ConnectException(e);
         } else {

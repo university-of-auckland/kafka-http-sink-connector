@@ -5,23 +5,23 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
+import java.io.*;
 import java.net.HttpURLConnection;
+import java.util.Arrays;
+import java.util.List;
 
 public class ApiRequest implements Request{
 
-    public static final String REQUEST_HEADER_CORRELATION_ID_KEY = "X-API-Correlation-Id";
-    public static final String REQUEST_HEADER_KAFKA_TOPIC_KEY = "X-Kafka-Topic";
+    static final String REQUEST_HEADER_CORRELATION_ID_KEY = "X-API-Correlation-Id";
+    static final String REQUEST_HEADER_KAFKA_TOPIC_KEY = "X-Kafka-Topic";
     private final static String STREAM_ENCODING = "UTF-8";
     private HttpURLConnection connection;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     private KafkaRecord kafkaRecord;
+    private static final List<Integer> CALLBACK_API_DOWN_HTTP_STATUS_CODE = Arrays.asList(502,503,504);
 
 
-    public ApiRequest(HttpURLConnection connection, KafkaRecord kafkaRecord) {
+    ApiRequest(HttpURLConnection connection, KafkaRecord kafkaRecord) {
         this.connection = connection;
         this.kafkaRecord = kafkaRecord;
     }
@@ -63,33 +63,60 @@ public class ApiRequest implements Request{
         } catch (Exception e) {
             throw new ApiRequestErrorException(e.getLocalizedMessage(), kafkaRecord);
         }
-
+        isSendRequestSuccessful();
         validateResponse();
     }
 
-    private void validateResponse() {
+    private void isSendRequestSuccessful() {
         try {
-                JSONObject response = new JSONObject(getResponse());
-                boolean retry = response.getBoolean("retry");
-                connection.disconnect();
-                if (retry) {
-                    throw new ApiResponseErrorException("Unable to process message.", kafkaRecord);
-                }
-        }catch (Exception e) {
-            throw new ApiResponseErrorException(e.getLocalizedMessage(), kafkaRecord);
+            int statusCode = connection.getResponseCode();
+            log.info("Response Status: {}", statusCode);
+            if(CALLBACK_API_DOWN_HTTP_STATUS_CODE.contains(statusCode)){
+                throw new ApiRequestErrorException("Unable to connect to callback API: "
+                        + " received status: " + statusCode, kafkaRecord);
+            }
+        } catch (IOException e) {
+            log.error("Error checking if Send Request was Successful.");
+            e.printStackTrace();
         }
     }
 
-    private String getResponse() throws IOException {
-        BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(),STREAM_ENCODING));
-        StringBuilder sb = new StringBuilder();
-        String line;
-        while((line = br.readLine()) != null){
-            sb.append(line);
+    private void validateResponse() {
+        JSONObject response = new JSONObject(getResponse());
+        boolean retry = response.getBoolean("retry");
+        connection.disconnect();
+        if (retry) {
+            throw new ApiResponseErrorException("Unable to process message.", kafkaRecord);
         }
-        br.close();
-        String response = sb.toString();
-        log.info("Response:{}", response);
-        return response;
+    }
+
+    private String getResponse() {
+        try {
+            return readResponse(connection.getInputStream());
+        } catch (IOException e) {
+            try {
+                String error = readResponse(connection.getErrorStream());
+                log.error("Error Validating response. \n Error:{}", error);
+                throw new ApiRequestErrorException(error, kafkaRecord);
+            } catch (IOException e1) {
+                log.error("Error Validating response. \n Error:{}", e1.getLocalizedMessage());
+                throw new ApiRequestErrorException(e1.getLocalizedMessage(), kafkaRecord);
+            }
+
+        }
+    }
+
+    private String readResponse(InputStream stream) throws IOException {
+        StringBuilder sb;
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(stream, STREAM_ENCODING))) {
+            sb = new StringBuilder();
+            String line;
+            while ((line = br.readLine()) != null) {
+                sb.append(line);
+            }
+            String response = sb.toString();
+            log.info("Response:{}", response);
+            return response;
+        }
     }
 }

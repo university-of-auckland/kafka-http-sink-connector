@@ -14,7 +14,7 @@ public class StopTaskHandler implements ExceptionHandler{
 
     @Override
     public void handel(CallBackApiException e) {
-        log.error("Stop task Strategy: Stopping task. \nError:{} \nErrored record: {}" , e.getMessage(),e.getRecord());
+        log.error("Stop task Strategy: Stopping task. \n Error:{} \n Errored record: {}" , e.getMessage(),e.getRecord());
         throw new ConnectException(e);
     }
 }
