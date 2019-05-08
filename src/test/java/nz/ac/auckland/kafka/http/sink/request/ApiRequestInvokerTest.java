@@ -19,7 +19,7 @@ import java.util.Map;
 
 import static org.mockito.Mockito.*;
 
-public class ApiRequestInvokerTest {
+class ApiRequestInvokerTest {
 
 
     @Mock
@@ -29,12 +29,12 @@ public class ApiRequestInvokerTest {
     @Mock
     private ApiRequestBuilder apiRequestBuilder;
 
-    KafkaRecord kafkaRecord;
-    HttpSinkConnectorConfig  config;
-    Collection<SinkRecord> records;
+    private KafkaRecord kafkaRecord;
+    private HttpSinkConnectorConfig  config;
+    private Collection<SinkRecord> records;
 
     @BeforeEach
-    public void initMocks() {
+    void initMocks() {
         MockitoAnnotations.initMocks(this);
         records = Collections.singleton(new SinkRecord("nz-ac-auckland-person", 0,
                 null, null, null, "{\"subject\":\"testUser\"}",0));
@@ -52,7 +52,7 @@ public class ApiRequestInvokerTest {
     @Test
     void Test_ApiResponseErrorException_throws_RetriableException(){
 
-        when(apiRequestBuilder.createRequest(anyString(), anyString(), any(KafkaRecord.class))).thenReturn(apiRequest);
+        when(apiRequestBuilder.createRequest(any(), any(KafkaRecord.class))).thenReturn(apiRequest);
         when(apiRequest.setHeaders(anyString(),anyString())).thenReturn(apiRequest);
 
         doThrow(ApiResponseErrorException.class).when(apiRequest).sendPayload(anyString());
@@ -63,7 +63,7 @@ public class ApiRequestInvokerTest {
 
 
         verify(apiRequestBuilder, times(1))
-                .createRequest(anyString(),anyString(),any(KafkaRecord.class));
+                .createRequest(any(),any(KafkaRecord.class));
         verify(apiRequest, times(1))
                 .setHeaders("", "|");
         verify(apiRequest, times(1)).sendPayload("{\"subject\":\"testUser\"}");
@@ -73,7 +73,7 @@ public class ApiRequestInvokerTest {
     @Test
     void Test_ApiRequestErrorException_throws_ConnectException(){
 
-        when(apiRequestBuilder.createRequest(anyString(), anyString(), any(KafkaRecord.class))).thenReturn(apiRequest);
+        when(apiRequestBuilder.createRequest(any(), any(KafkaRecord.class))).thenReturn(apiRequest);
         when(apiRequest.setHeaders(anyString(),anyString())).thenReturn(apiRequest);
 
         doThrow(ApiRequestErrorException.class).when(apiRequest).sendPayload(anyString());
@@ -84,7 +84,7 @@ public class ApiRequestInvokerTest {
 
 
         verify(apiRequestBuilder, times(1))
-                .createRequest(anyString(),anyString(),any(KafkaRecord.class));
+                .createRequest(any(),any(KafkaRecord.class));
         verify(apiRequest, times(1))
                 .setHeaders("", "|");
         verify(apiRequest, times(1)).sendPayload("{\"subject\":\"testUser\"}");

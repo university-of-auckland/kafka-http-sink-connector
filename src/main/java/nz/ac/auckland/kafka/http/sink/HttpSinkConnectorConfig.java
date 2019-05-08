@@ -32,8 +32,18 @@ public class HttpSinkConnectorConfig extends AbstractConfig {
   public static final String HEADER_SEPERATOR = "callback.header.separator";
   private static final String HEADER_SEPERATOR_DOC = "Separator character used in "
             + "headers property.";
-  private static final String HEADER_SEPERATOR_DISPLAY = "header separator";
+  private static final String HEADER_SEPERATOR_DISPLAY = "Header separator";
   private static final String HEADER_SEPERATOR_DEFAULT = "\\|";
+
+  private static final String CONNECT_TIMEOUT = "callback.timeout.connect.ms";
+  private static final String CONNECT_TIMEOUT_DOC = "Connect timeout in ms when connecting to call back url.";
+  private static final String CONNECT_TIMEOUT_DISPLAY = "Connect timeout (ms)";
+  private static final String CONNECT_TIMEOUT_DEFAULT = "60000";
+
+  private static final String READ_TIMEOUT = "callback.timeout.read.ms";
+  private static final String READ_TIMEOUT_DOC = "Read timeout in ms when reading response from call back url.";
+  private static final String READ_TIMEOUT_DISPLAY = "Read timeout (ms)";
+  private static final String READ_TIMEOUT_DEFAULT = "60000";
 
   public static final String EXCEPTION_STRATEGY = "exception.strategy";
   private static final String EXCEPTION_STRATEGY_DEFAULT = ExceptionStrategyHandlerFactory.ExceptionStrategy.PROGRESS_BACK_OFF_DROP_MESSAGE.toString();
@@ -54,6 +64,8 @@ public class HttpSinkConnectorConfig extends AbstractConfig {
 
   public final String httpApiUrl;
   public final RequestMethod requestMethod;
+  public final int connectTimeout;
+  public final int readTimeout;
   public final String headers;
   public final String headerSeparator;
   public final String[] retryBackoffsec;
@@ -63,6 +75,8 @@ public class HttpSinkConnectorConfig extends AbstractConfig {
     super(config, parsedConfig);
     httpApiUrl = getString(HTTP_API_URL);
     requestMethod = RequestMethod.valueOf(getString(REQUEST_METHOD).toUpperCase());
+    connectTimeout = getInt(CONNECT_TIMEOUT);
+    readTimeout = getInt(READ_TIMEOUT);
     headers = getString(HEADERS);
     headerSeparator = getString(HEADER_SEPERATOR);
     retryBackoffsec = getString(RETRY_BACKOFF_SEC).split(RETRY_BACKOFF_SEC_SEPARATOR);
@@ -73,7 +87,7 @@ public class HttpSinkConnectorConfig extends AbstractConfig {
     this(conf(), parsedConfig);
   }
 
-  public static ConfigDef conf() {
+  static ConfigDef conf() {
     return new ConfigDef()
             .define(
                 HTTP_API_URL,
@@ -95,6 +109,26 @@ public class HttpSinkConnectorConfig extends AbstractConfig {
                 2,
                 ConfigDef.Width.MEDIUM,
                 REQUEST_METHOD_DISPLAY
+            ).define(
+                    CONNECT_TIMEOUT,
+                    ConfigDef.Type.INT,
+                    CONNECT_TIMEOUT_DEFAULT,
+                    ConfigDef.Importance.HIGH,
+                    CONNECT_TIMEOUT_DOC,
+                    API_REQUEST,
+                    2,
+                    ConfigDef.Width.MEDIUM,
+                    CONNECT_TIMEOUT_DISPLAY
+            ).define(
+                    READ_TIMEOUT,
+                    ConfigDef.Type.INT,
+                    READ_TIMEOUT_DEFAULT,
+                    ConfigDef.Importance.HIGH,
+                    READ_TIMEOUT_DOC,
+                    API_REQUEST,
+                    2,
+                    ConfigDef.Width.MEDIUM,
+                    READ_TIMEOUT_DISPLAY
             ).define(
                 HEADERS,
                 ConfigDef.Type.STRING,

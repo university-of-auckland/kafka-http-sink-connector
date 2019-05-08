@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.net.HttpURLConnection;
+import java.net.SocketTimeoutException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -75,8 +76,11 @@ public class ApiRequest implements Request{
                 throw new ApiRequestErrorException("Unable to connect to callback API: "
                         + " received status: " + statusCode, kafkaRecord);
             }
+        }catch (SocketTimeoutException e) {
+            log.warn("Unable to obtain response from callback API. \n Error:{} ",e.getMessage());
+            throw new ApiResponseErrorException(e.getLocalizedMessage());
         } catch (IOException e) {
-            log.error("Error checking if Send Request was Successful.");
+            log.warn("Error checking if Send Request was Successful.");
             e.printStackTrace();
         }
     }

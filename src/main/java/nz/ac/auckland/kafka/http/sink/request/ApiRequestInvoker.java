@@ -28,8 +28,8 @@ public class ApiRequestInvoker {
         setExceptionStrategy();
     }
 
-    public ApiRequestInvoker(final HttpSinkConnectorConfig config,
-                             final SinkTaskContext context, RequestBuilder requestBuilder) {
+    ApiRequestInvoker(final HttpSinkConnectorConfig config,
+                      final SinkTaskContext context, RequestBuilder requestBuilder) {
         this.config = config;
         this.sinkContext = context;
         this.requestBuilder = requestBuilder;
@@ -46,7 +46,7 @@ public class ApiRequestInvoker {
     private void sendAPiRequest(SinkRecord record){
         KafkaRecord kafkaRecord = new KafkaRecord(record);
         try {
-            requestBuilder.createRequest(config.httpApiUrl, config.requestMethod.toString(),kafkaRecord)
+            requestBuilder.createRequest(config,kafkaRecord)
                          .setHeaders(config.headers, config.headerSeparator)
                          .sendPayload(record.value().toString());
         }catch (ApiResponseErrorException e) {
