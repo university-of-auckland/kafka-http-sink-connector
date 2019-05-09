@@ -29,12 +29,12 @@ public class ApiRequest implements Request{
 
     @Override
     public ApiRequest setHeaders(String headers, String headerSeparator) {
-        log.info("Processing headers: headerSeparator={}", headerSeparator);
+        log.debug("Processing headers: headerSeparator={}", headerSeparator);
         for (String headerKeyValue : headers.split(headerSeparator)) {
             if (headerKeyValue.contains(":")) {
                 String key = headerKeyValue.split(":")[0];
                 String value = headerKeyValue.split(":")[1];
-                log.info("Setting header property: {}",key);
+                log.debug("Setting header property: {}",key);
                 connection.setRequestProperty(key, value);
             }
         }
@@ -44,13 +44,13 @@ public class ApiRequest implements Request{
     }
 
     private void addTopicHeader() {
-        log.info("Adding topic header: {} = {} ",REQUEST_HEADER_KAFKA_TOPIC_KEY, kafkaRecord.getTopic());
+        log.debug("Adding topic header: {} = {} ",REQUEST_HEADER_KAFKA_TOPIC_KEY, kafkaRecord.getTopic());
         connection.setRequestProperty(REQUEST_HEADER_KAFKA_TOPIC_KEY, kafkaRecord.getTopic());
     }
 
     private void addCorrelationIdHeader() {
         String correlationId = kafkaRecord.getTopic() + "-" + kafkaRecord.getOffset();
-        log.info("Adding correlationId header: {} = {} ",REQUEST_HEADER_CORRELATION_ID_KEY, correlationId);
+        log.debug("Adding correlationId header: {} = {} ",REQUEST_HEADER_CORRELATION_ID_KEY, correlationId);
         connection.setRequestProperty(REQUEST_HEADER_CORRELATION_ID_KEY, correlationId);
     }
 

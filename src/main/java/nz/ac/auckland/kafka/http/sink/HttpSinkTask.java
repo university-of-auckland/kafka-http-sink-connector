@@ -15,8 +15,8 @@ import java.util.Map;
 public class HttpSinkTask extends SinkTask {
   private static final Logger log = LoggerFactory.getLogger(HttpSinkTask.class);
 
-  HttpSinkConnectorConfig config;
-  ApiRequestInvoker apiRequestInvoker;
+  private HttpSinkConnectorConfig config;
+  private ApiRequestInvoker apiRequestInvoker;
 
 
   @Override
@@ -29,7 +29,7 @@ public class HttpSinkTask extends SinkTask {
 
   @Override
   public void put(Collection<SinkRecord> records) {
-    log.info("Totals records:{}", records.size());
+    log.debug("Totals records:{}", records.size());
     if (records.isEmpty()) {
       return;
     }
@@ -42,7 +42,7 @@ public class HttpSinkTask extends SinkTask {
   }
 
   public void stop() {
-    log.info("Stopping task");
+    log.info("Stopping task for {}", context.configs().get("name"));
     MDC.clear();
   }
 

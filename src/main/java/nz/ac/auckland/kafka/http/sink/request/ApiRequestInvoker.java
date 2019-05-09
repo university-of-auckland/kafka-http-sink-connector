@@ -21,7 +21,7 @@ public class ApiRequestInvoker {
     private ExceptionHandler exceptionHandler;
 
     public ApiRequestInvoker(final HttpSinkConnectorConfig config, final SinkTaskContext context) {
-        log.info("Initializing ApiRequestInvoker");
+        log.debug("Initializing ApiRequestInvoker");
         this.config = config;
         this.sinkContext = context;
         this.requestBuilder = new ApiRequestBuilder();

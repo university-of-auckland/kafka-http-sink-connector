@@ -72,7 +72,7 @@ public class HttpSinkConnectorConfig extends AbstractConfig {
   public final ExceptionStrategyHandlerFactory.ExceptionStrategy exceptionStrategy;
 
   public HttpSinkConnectorConfig(ConfigDef config, Map<String, String> parsedConfig) {
-    super(config, parsedConfig);
+    super(config, parsedConfig, false);
     httpApiUrl = getString(HTTP_API_URL);
     requestMethod = RequestMethod.valueOf(getString(REQUEST_METHOD).toUpperCase());
     connectTimeout = getInt(CONNECT_TIMEOUT);

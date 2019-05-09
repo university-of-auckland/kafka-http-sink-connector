@@ -34,7 +34,7 @@ public class ProgressiveBackoffStopTaskHandler implements ExceptionHandler {
             throw new ConnectException(e);
         } else {
             long waitTime = Long.parseLong(retryBackoffsec[retryIndex]) * MILLI_SEC_MULTIPLIER;
-            log.info("Progressive back-off stop Strategy: Retrying {}/{} after {} ms. Brackets:{} secs.", retryIndex+ADJUST_ZERO_ELEMENT, maxRetries, waitTime, retryBackoffsec);
+            log.info("Progressive back-off stop Strategy: {}/{} Will Retry after {} ms. Brackets:{} secs.", retryIndex+ADJUST_ZERO_ELEMENT, maxRetries, waitTime, retryBackoffsec);
             sinkContext.timeout(waitTime);
             retryIndex++;
             throw new RetriableException(e);

@@ -9,14 +9,14 @@ public class DropMessageHandler implements ExceptionHandler {
     private final SinkTaskContext sinkContext;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
-    public DropMessageHandler(SinkTaskContext context) {
+    DropMessageHandler(SinkTaskContext context) {
         log.info("Exception strategy: Drop message Strategy.");
         this.sinkContext = context;
     }
 
     @Override
     public void handel(CallBackApiException e) {
-        log.warn("Drop message Strategy: Dropping message {}" , e.getRecord());
+        log.error("Drop message Strategy: Dropping message {}" , e.getRecord());
         sinkContext.requestCommit();
     }
 }
