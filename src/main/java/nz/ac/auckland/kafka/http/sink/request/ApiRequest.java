@@ -61,11 +61,13 @@ public class ApiRequest implements Request{
             writer.flush();
             writer.close();
             log.info("Submitted request: url={} payload={}",connection.getURL(), payload);
+            isSendRequestSuccessful();
+            validateResponse();
         } catch (Exception e) {
             throw new ApiRequestErrorException(e.getLocalizedMessage(), kafkaRecord);
+        } finally {
+            connection.disconnect();
         }
-        isSendRequestSuccessful();
-        validateResponse();
     }
 
     private void isSendRequestSuccessful() {
@@ -88,7 +90,6 @@ public class ApiRequest implements Request{
     private void validateResponse() {
         JSONObject response = new JSONObject(getResponse());
         boolean retry = response.getBoolean("retry");
-        connection.disconnect();
         if (retry) {
             throw new ApiResponseErrorException("Unable to process message.", kafkaRecord);
         }
