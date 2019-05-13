@@ -63,7 +63,9 @@ public class ApiRequest implements Request{
             log.info("Submitted request: url={} payload={}",connection.getURL(), payload);
             isSendRequestSuccessful();
             validateResponse();
-        } catch (Exception e) {
+        }catch (ApiResponseErrorException e) {
+            throw e;
+        }catch (Exception e) {
             throw new ApiRequestErrorException(e.getLocalizedMessage(), kafkaRecord);
         } finally {
             connection.disconnect();
