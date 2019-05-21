@@ -110,7 +110,7 @@
           <stringProp name="RandomTimer.range">${__P(stdev-delay-between-requests)}</stringProp>
         </GaussianRandomTimer>
         <hashTree/>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /topics/nz-ac-auckland-person" enabled="true">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /topics/nz-ac-auckland-employment-mock" enabled="true">
           <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments">
@@ -125,7 +125,7 @@
           <stringProp name="HTTPSampler.port">${__P(port)}</stringProp>
           <stringProp name="HTTPSampler.protocol">${__P(protocol)}</stringProp>
           <stringProp name="HTTPSampler.contentEncoding"></stringProp>
-          <stringProp name="HTTPSampler.path">/topics/nz-ac-auckland-person</stringProp>
+          <stringProp name="HTTPSampler.path">/topics/nz-ac-auckland-employment-mock</stringProp>
           <stringProp name="HTTPSampler.method">POST</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
@@ -148,7 +148,72 @@
               </elementProp>
               <elementProp name="" elementType="Header">
                 <stringProp name="Header.name">REMOTE_USER</stringProp>
-                <stringProp name="Header.value">iser384</stringProp>
+                <stringProp name="Header.value">iser482</stringProp>
+              </elementProp>
+            </collectionProp>
+          </HeaderManager>
+          <hashTree/>
+          <JSR223PreProcessor guiclass="TestBeanGUI" testclass="JSR223PreProcessor" testname="Record URL, NavPath and other data" enabled="true">
+            <stringProp name="scriptLanguage">groovy</stringProp>
+            <stringProp name="parameters"></stringProp>
+            <stringProp name="filename"></stringProp>
+            <stringProp name="cacheKey">true</stringProp>
+            <stringProp name="script">// get parent sampler name, hostname and path
+String url = sampler.getUrl().getHost() + sampler.getUrl().getPath();
+String navPath = sampler.getName();
+String testComponent = sampler.getComment();
+String method = sampler.getMethod();
+
+navPath = navPath.replaceAll(&quot;\\[.*\\]&quot;, &quot;&quot;);
+
+vars.put(&quot;thread-number&quot;, String.valueOf(ctx.getThreadNum()));
+vars.put(&quot;url&quot;, url);
+vars.put(&quot;nav-path&quot;, navPath);
+vars.put(&quot;test-component&quot;, testComponent);
+vars.put(&quot;method&quot;, method);
+</stringProp>
+          </JSR223PreProcessor>
+          <hashTree/>
+        </hashTree>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /topics/nz-ac-auckland-person-mock" enabled="true">
+          <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">{&quot;subject&quot;:&quot;${EMPLID}&quot;}</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+          <stringProp name="HTTPSampler.domain">${__P(env)}</stringProp>
+          <stringProp name="HTTPSampler.port">${__P(port)}</stringProp>
+          <stringProp name="HTTPSampler.protocol">${__P(protocol)}</stringProp>
+          <stringProp name="HTTPSampler.contentEncoding"></stringProp>
+          <stringProp name="HTTPSampler.path">/topics/nz-ac-auckland-person-mock</stringProp>
+          <stringProp name="HTTPSampler.method">POST</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+          <stringProp name="HTTPSampler.embedded_url_re"></stringProp>
+          <stringProp name="HTTPSampler.connect_timeout"></stringProp>
+          <stringProp name="HTTPSampler.response_timeout"></stringProp>
+        </HTTPSamplerProxy>
+        <hashTree>
+          <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+            <collectionProp name="HeaderManager.headers">
+              <elementProp name="" elementType="Header">
+                <stringProp name="Header.name">Authorization</stringProp>
+                <stringProp name="Header.value">${BASIC_AUTH}</stringProp>
+              </elementProp>
+              <elementProp name="" elementType="Header">
+                <stringProp name="Header.name">Content-Type</stringProp>
+                <stringProp name="Header.value">application/json</stringProp>
+              </elementProp>
+              <elementProp name="" elementType="Header">
+                <stringProp name="Header.name">REMOTE_USER</stringProp>
+                <stringProp name="Header.value">iser482</stringProp>
               </elementProp>
             </collectionProp>
           </HeaderManager>
