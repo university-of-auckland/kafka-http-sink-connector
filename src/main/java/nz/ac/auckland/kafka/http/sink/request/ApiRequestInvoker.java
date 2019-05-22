@@ -9,6 +9,7 @@ import org.apache.kafka.connect.sink.SinkRecord;
 import org.apache.kafka.connect.sink.SinkTaskContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import java.util.Collection;
 
@@ -38,9 +39,21 @@ public class ApiRequestInvoker {
 
     public void invoke(final Collection<SinkRecord> records){
         for(SinkRecord record: records){
-            log.info("Processing record: topic={}  offset={} value={}", record.topic(), record.kafkaOffset(), record.value().toString());
+            MDC.put("connection-name",buildTraceId(record));
+            log.info("Processing record: topic={}  partition={} offset={} value={}", record.topic(), record.kafkaPartition(), record.kafkaOffset(), record.value().toString());
             sendAPiRequest(record);
+            MDC.clear();
         }
+    }
+
+    private String buildTraceId(SinkRecord record) {
+        return this.sinkContext.configs().get("name") +
+                "_" +
+                record.topic() +
+                "_" +
+                record.kafkaPartition() +
+                "_" +
+                record.kafkaOffset();
     }
 
     private void sendAPiRequest(SinkRecord record){

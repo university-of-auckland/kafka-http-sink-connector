@@ -21,7 +21,6 @@ public class HttpSinkTask extends SinkTask {
 
   @Override
   public void start(final Map<String, String> props) {
-    MDC.put("connection-name","[Connection=" + context.configs().get("name") + "]");
     log.info("Starting task for {} ", context.configs().get("name"));
     config = new HttpSinkConnectorConfig(props);
     apiRequestInvoker = new ApiRequestInvoker(config, context);
@@ -38,7 +37,7 @@ public class HttpSinkTask extends SinkTask {
 
   @Override
   public void flush(Map<TopicPartition, OffsetAndMetadata> map) {
-    // Not necessary
+    MDC.clear();
   }
 
   public void stop() {
