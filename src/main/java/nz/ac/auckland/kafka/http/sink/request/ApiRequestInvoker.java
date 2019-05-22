@@ -47,13 +47,15 @@ public class ApiRequestInvoker {
     }
 
     private String buildTraceId(SinkRecord record) {
-        return this.sinkContext.configs().get("name") +
-                "_" +
+        return "[connection=" +
+                this.sinkContext.configs().get("name") +
+                " kafka_topic=" +
                 record.topic() +
-                "_" +
+                " kafka_partition=" +
                 record.kafkaPartition() +
-                "_" +
-                record.kafkaOffset();
+                " kafka_offset=" +
+                record.kafkaOffset() +
+                "]";
     }
 
     private void sendAPiRequest(SinkRecord record){
