@@ -1,7 +1,9 @@
 package nz.ac.auckland.kafka.http.sink.request;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import nz.ac.auckland.kafka.http.sink.HttpSinkConnectorConfig;
 import nz.ac.auckland.kafka.http.sink.model.KafkaRecord;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,10 +13,13 @@ import java.net.SocketTimeoutException;
 import java.util.Arrays;
 import java.util.List;
 
+import static nz.ac.auckland.kafka.http.sink.HttpSinkConnectorConfig.HEADER_SEPERATOR_DEFAULT;
+
 public class ApiRequest implements Request{
 
-    static final String REQUEST_HEADER_CORRELATION_ID_KEY = "X-API-Correlation-Id";
+    static final String REQUEST_HEADER_CORRELATION_ID_KEY = "X-B3-TraceId";
     static final String REQUEST_HEADER_KAFKA_TOPIC_KEY = "X-Kafka-Topic";
+    static final String REQUEST_HEADER_INFO_KEY = "X-B3-Info" ;
     private final static String STREAM_ENCODING = "UTF-8";
     private HttpURLConnection connection;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
@@ -28,9 +33,28 @@ public class ApiRequest implements Request{
     }
 
     @Override
-    public ApiRequest setHeaders(String headers, String headerSeparator) {
-        log.debug("Processing headers: headerSeparator={}", headerSeparator);
-        for (String headerKeyValue : headers.split(headerSeparator)) {
+    public ApiRequest setHeaders(String headerString, String traceId) {
+        if(HttpSinkConnectorConfig.nonJsonHeader) {
+            setNonJsonHeaders(headerString);
+        }else if(headerString != null && headerString.trim().length() > 0 ) {
+            log.debug("Processing headers: {}", headerString);
+            JsonObject headers = new JsonParser().parse(headerString).getAsJsonObject();
+
+            log.debug("headers: {}", headers.toString());
+            for (String headerKey : headers.keySet()) {
+                log.debug("Setting header property: {}", headerKey);
+                connection.setRequestProperty(headerKey, headers.get(headerKey).getAsString());
+            }
+        }
+        addCorrelationIdHeader(traceId);
+        addInfoHeader();
+        addTopicHeader();
+        return this;
+    }
+
+    private void setNonJsonHeaders(String headers){
+        log.debug("Processing Non json headers: {}, separator: {} ", headers, HEADER_SEPERATOR_DEFAULT);
+        for (String headerKeyValue : headers.split(HEADER_SEPERATOR_DEFAULT)) {
             if (headerKeyValue.contains(":")) {
                 String key = headerKeyValue.split(":")[0];
                 String value = headerKeyValue.split(":")[1];
@@ -38,20 +62,23 @@ public class ApiRequest implements Request{
                 connection.setRequestProperty(key, value);
             }
         }
-        addCorrelationIdHeader();
-        addTopicHeader();
-        return this;
     }
+
 
     private void addTopicHeader() {
         log.debug("Adding topic header: {} = {} ",REQUEST_HEADER_KAFKA_TOPIC_KEY, kafkaRecord.getTopic());
         connection.setRequestProperty(REQUEST_HEADER_KAFKA_TOPIC_KEY, kafkaRecord.getTopic());
     }
 
-    private void addCorrelationIdHeader() {
-        String correlationId = kafkaRecord.getTopic() + "-" + kafkaRecord.getOffset();
-        log.debug("Adding correlationId header: {} = {} ",REQUEST_HEADER_CORRELATION_ID_KEY, correlationId);
-        connection.setRequestProperty(REQUEST_HEADER_CORRELATION_ID_KEY, correlationId);
+    private void addCorrelationIdHeader(String traceId) {
+        log.debug("Adding correlationId header: {} = {} ",REQUEST_HEADER_CORRELATION_ID_KEY, traceId);
+        connection.setRequestProperty(REQUEST_HEADER_CORRELATION_ID_KEY,traceId );
+    }
+    private void addInfoHeader() {
+        String info = "topic=" + kafkaRecord.getTopic() + "|partition=" + kafkaRecord.getPartition()
+                + "|offset=" + kafkaRecord.getOffset();
+        log.debug("Adding info header: {} = {} ",REQUEST_HEADER_INFO_KEY, info);
+        connection.setRequestProperty(REQUEST_HEADER_INFO_KEY, info);
     }
 
     @Override
@@ -90,8 +117,9 @@ public class ApiRequest implements Request{
     }
 
     private void validateResponse() {
-        JSONObject response = new JSONObject(getResponse());
-        boolean retry = response.getBoolean("retry");
+        JsonObject response =  new JsonParser().parse(getResponse()).getAsJsonObject();
+
+        boolean retry = response.get("retry").getAsBoolean();
         if (retry) {
             throw new ApiResponseErrorException("Unable to process message.", kafkaRecord);
         }

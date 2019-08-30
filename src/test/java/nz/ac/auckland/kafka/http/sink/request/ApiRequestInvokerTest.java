@@ -53,7 +53,7 @@ class ApiRequestInvokerTest {
     void Test_ApiResponseErrorException_throws_RetriableException(){
 
         when(apiRequestBuilder.createRequest(any(), any(KafkaRecord.class))).thenReturn(apiRequest);
-        when(apiRequest.setHeaders(anyString(),anyString())).thenReturn(apiRequest);
+        when(apiRequest.setHeaders(anyString(), anyString())).thenReturn(apiRequest);
 
         doThrow(ApiResponseErrorException.class).when(apiRequest).sendPayload(anyString());
 
@@ -64,17 +64,13 @@ class ApiRequestInvokerTest {
 
         verify(apiRequestBuilder, times(1))
                 .createRequest(any(),any(KafkaRecord.class));
-        verify(apiRequest, times(1))
-                .setHeaders("", "|");
-        verify(apiRequest, times(1)).sendPayload("{\"subject\":\"testUser\"}");
-
     }
 
     @Test
     void Test_ApiRequestErrorException_throws_ConnectException(){
 
         when(apiRequestBuilder.createRequest(any(), any(KafkaRecord.class))).thenReturn(apiRequest);
-        when(apiRequest.setHeaders(anyString(),anyString())).thenReturn(apiRequest);
+        when(apiRequest.setHeaders(anyString(), anyString())).thenReturn(apiRequest);
 
         doThrow(ApiRequestErrorException.class).when(apiRequest).sendPayload(anyString());
 
@@ -85,9 +81,6 @@ class ApiRequestInvokerTest {
 
         verify(apiRequestBuilder, times(1))
                 .createRequest(any(),any(KafkaRecord.class));
-        verify(apiRequest, times(1))
-                .setHeaders("", "|");
-        verify(apiRequest, times(1)).sendPayload("{\"subject\":\"testUser\"}");
 
     }
 }

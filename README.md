@@ -16,8 +16,7 @@ Property | Description | Value |Default|Required|
 topics | Topic(s) you want to listen to | String (use comma to pass multiple topics)| |Y|
 callback.request.url| Callback url that should be called when a message is received on the topic | String | |Y
 callback.request.methods| Method of the callback url| POST, PUT,DELETE | | Y|
-callback.request.headers| Headers to be passed to the callback|String (use separator to pass multiple values. Default separator is pipe '&#124;')| |N
-callback.header.separator| Separator character used to separate header properties| Character| &#124; |Y
+callback.request.headers| Headers to be passed to the callback|JSON String ( Sample: `"{\"Content-Type\":\"application/json\",\"apikey\":\"API_KEY_HERE\"}"` )| |N
 exception.strategy| Strategy to be used in-case the callback request returns response with `retry` flag `true`.| PROGRESS_BACK_OFF_DROP_MESSAGE, PROGRESS_BACK_OFF_STOP_TASK, DROP_MESSAGE, STOP_TASK | PROGRESS_BACK_OFF_DROP_MESSAGE | Y
 retry.backoff.sec| The time in seconds to wait following an error before a retry attempt is made.| Integer | 5,30,60,300,600 | Y
 

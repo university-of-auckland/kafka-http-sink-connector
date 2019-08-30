@@ -11,6 +11,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
+import javax.xml.bind.DatatypeConverter;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
 
 public class ApiRequestInvoker {
@@ -39,30 +42,49 @@ public class ApiRequestInvoker {
 
     public void invoke(final Collection<SinkRecord> records){
         for(SinkRecord record: records){
-            MDC.put("connection-name",buildTraceId(record));
+            String traceId = generateTraceId(record);
+            MDC.put("X-B3-TraceId",traceId);
+            MDC.put("X-B3-SpanId",traceId);
+            MDC.put("X-B3-Info", buildLogInfo(record));
             log.info("Processing record: topic={}  partition={} offset={} value={}", record.topic(), record.kafkaPartition(), record.kafkaOffset(), record.value().toString());
-            sendAPiRequest(record);
+            sendAPiRequest(record, traceId);
             MDC.clear();
         }
     }
 
-    private String buildTraceId(SinkRecord record) {
-        return "[connection=" +
-                this.sinkContext.configs().get("name") +
-                " kafka_topic=" +
-                record.topic() +
-                " kafka_partition=" +
-                record.kafkaPartition() +
-                " kafka_offset=" +
-                record.kafkaOffset() +
-                "]";
+
+    private String generateTraceId(SinkRecord record){
+        String trace = this.sinkContext.configs().get("name") + record.topic() + record.kafkaPartition() + record.kafkaOffset();
+
+        try {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            md.update(trace.getBytes());
+            byte[] digest = md.digest();
+            // As per APM standards keeping the trace limited to 16 chars.
+            trace = DatatypeConverter.printHexBinary(digest).toLowerCase().substring(0,16);
+            return  trace;
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        return  trace;
     }
 
-    private void sendAPiRequest(SinkRecord record){
+    private String buildLogInfo(SinkRecord record) {
+        return "connection=" +
+                this.sinkContext.configs().get("name") +
+                "|kafka_topic=" +
+                record.topic() +
+                "|kafka_partition=" +
+                record.kafkaPartition() +
+                "|kafka_offset=" +
+                record.kafkaOffset();
+    }
+
+    private void sendAPiRequest(SinkRecord record, String traceId){
         KafkaRecord kafkaRecord = new KafkaRecord(record);
         try {
             requestBuilder.createRequest(config,kafkaRecord)
-                         .setHeaders(config.headers, config.headerSeparator)
+                         .setHeaders(config.headers, traceId)
                          .sendPayload(record.value().toString());
         }catch (ApiResponseErrorException e) {
             exceptionHandler.handel(e);

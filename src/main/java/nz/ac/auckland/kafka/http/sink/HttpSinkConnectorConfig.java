@@ -2,6 +2,7 @@ package nz.ac.auckland.kafka.http.sink;
 
 import nz.ac.auckland.kafka.http.sink.handler.ExceptionStrategyHandlerFactory;
 import nz.ac.auckland.kafka.http.sink.validator.EnumValidator;
+import nz.ac.auckland.kafka.http.sink.validator.JsonValidator;
 import org.apache.kafka.common.config.AbstractConfig;
 import org.apache.kafka.common.config.ConfigDef;
 
@@ -29,11 +30,9 @@ public class HttpSinkConnectorConfig extends AbstractConfig {
             + "Default separator is |, use header.separator to modify this.";
   private static final String HEADERS_DISPLAY = "Callback request headers";
 
+  //TODO: Removed header separator, allow only Json headers
   public static final String HEADER_SEPERATOR = "callback.header.separator";
-  private static final String HEADER_SEPERATOR_DOC = "Separator character used in "
-            + "headers property.";
-  private static final String HEADER_SEPERATOR_DISPLAY = "Header separator";
-  private static final String HEADER_SEPERATOR_DEFAULT = "\\|";
+  public static final String HEADER_SEPERATOR_DEFAULT = "\\|";
 
   private static final String CONNECT_TIMEOUT = "callback.timeout.connect.ms";
   private static final String CONNECT_TIMEOUT_DOC = "Connect timeout in ms when connecting to call back url.";
@@ -67,9 +66,11 @@ public class HttpSinkConnectorConfig extends AbstractConfig {
   public final int connectTimeout;
   public final int readTimeout;
   public final String headers;
-  public final String headerSeparator;
   public final String[] retryBackoffsec;
   public final ExceptionStrategyHandlerFactory.ExceptionStrategy exceptionStrategy;
+
+  public static boolean nonJsonHeader;
+
 
   public HttpSinkConnectorConfig(ConfigDef config, Map<String, String> parsedConfig) {
     super(config, parsedConfig, false);
@@ -78,7 +79,6 @@ public class HttpSinkConnectorConfig extends AbstractConfig {
     connectTimeout = getInt(CONNECT_TIMEOUT);
     readTimeout = getInt(READ_TIMEOUT);
     headers = getString(HEADERS);
-    headerSeparator = getString(HEADER_SEPERATOR);
     retryBackoffsec = getString(RETRY_BACKOFF_SEC).split(RETRY_BACKOFF_SEC_SEPARATOR);
     exceptionStrategy = ExceptionStrategyHandlerFactory.ExceptionStrategy.valueOf(getString(EXCEPTION_STRATEGY).toUpperCase());
   }
@@ -133,22 +133,13 @@ public class HttpSinkConnectorConfig extends AbstractConfig {
                 HEADERS,
                 ConfigDef.Type.STRING,
                 ConfigDef.NO_DEFAULT_VALUE,
+                new JsonValidator(),
                 ConfigDef.Importance.HIGH,
                 HEADERS_DOC,
                 API_REQUEST,
                 3,
                 ConfigDef.Width.MEDIUM,
                 HEADERS_DISPLAY
-            ).define(
-                HEADER_SEPERATOR,
-                ConfigDef.Type.STRING,
-                HEADER_SEPERATOR_DEFAULT,
-                ConfigDef.Importance.HIGH,
-                HEADER_SEPERATOR_DOC,
-                API_REQUEST,
-                4,
-                ConfigDef.Width.SHORT,
-                HEADER_SEPERATOR_DISPLAY
             ).define(
                 RETRY_BACKOFF_SEC,
                 ConfigDef.Type.STRING,
@@ -173,4 +164,5 @@ public class HttpSinkConnectorConfig extends AbstractConfig {
                 EXCEPTION_STRATEGY_DISPLAY
             );
   }
+
 }
