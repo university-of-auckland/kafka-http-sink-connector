@@ -17,6 +17,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import static nz.ac.auckland.kafka.http.sink.HttpSinkConnectorConfig.HEADER_SEPERATOR_DEFAULT;
 import static org.mockito.Mockito.*;
 
 class ApiRequestInvokerTest {
@@ -29,7 +30,6 @@ class ApiRequestInvokerTest {
     @Mock
     private ApiRequestBuilder apiRequestBuilder;
 
-    private KafkaRecord kafkaRecord;
     private HttpSinkConnectorConfig  config;
     private Collection<SinkRecord> records;
 
@@ -38,12 +38,12 @@ class ApiRequestInvokerTest {
         MockitoAnnotations.initMocks(this);
         records = Collections.singleton(new SinkRecord("nz-ac-auckland-person", 0,
                 null, null, null, "{\"subject\":\"testUser\"}",0));
-        kafkaRecord = new KafkaRecord((SinkRecord)records.toArray()[0]);
+
         Map<String,String> props= new HashMap<>();
         props.put(HttpSinkConnectorConfig.HTTP_API_URL,"http://mockbin.com");
         props.put(HttpSinkConnectorConfig.REQUEST_METHOD,"POST");
         props.put(HttpSinkConnectorConfig.HEADERS,"");
-        props.put(HttpSinkConnectorConfig.HEADER_SEPERATOR,"|");
+        props.put(HttpSinkConnectorConfig.HEADER_SEPERATOR, HEADER_SEPERATOR_DEFAULT);
         props.put(HttpSinkConnectorConfig.EXCEPTION_STRATEGY,"PROGRESS_BACK_OFF_DROP_MESSAGE");
         config = new HttpSinkConnectorConfig(props);
     }
@@ -53,13 +53,13 @@ class ApiRequestInvokerTest {
     void Test_ApiResponseErrorException_throws_RetriableException(){
 
         when(apiRequestBuilder.createRequest(any(), any(KafkaRecord.class))).thenReturn(apiRequest);
-        when(apiRequest.setHeaders(anyString(), anyString())).thenReturn(apiRequest);
+        when(apiRequest.setHeaders(anyString(), anyString(), anyString())).thenReturn(apiRequest);
 
         doThrow(ApiResponseErrorException.class).when(apiRequest).sendPayload(anyString());
 
         ApiRequestInvoker invoker = new ApiRequestInvoker(config,sinkTaskContext, apiRequestBuilder);
         Assertions.assertThrows(RetriableException.class, () ->
-                invoker.invoke(records));
+                invoker.invoke(records, "TRACE_ID"));
 
 
         verify(apiRequestBuilder, times(1))
@@ -70,13 +70,13 @@ class ApiRequestInvokerTest {
     void Test_ApiRequestErrorException_throws_ConnectException(){
 
         when(apiRequestBuilder.createRequest(any(), any(KafkaRecord.class))).thenReturn(apiRequest);
-        when(apiRequest.setHeaders(anyString(), anyString())).thenReturn(apiRequest);
+        when(apiRequest.setHeaders(anyString(), anyString(), anyString())).thenReturn(apiRequest);
 
         doThrow(ApiRequestErrorException.class).when(apiRequest).sendPayload(anyString());
 
         ApiRequestInvoker invoker = new ApiRequestInvoker(config,sinkTaskContext, apiRequestBuilder);
         Assertions.assertThrows(ConnectException.class, () ->
-                invoker.invoke(records));
+                invoker.invoke(records, "TRACE_ID"));
 
 
         verify(apiRequestBuilder, times(1))

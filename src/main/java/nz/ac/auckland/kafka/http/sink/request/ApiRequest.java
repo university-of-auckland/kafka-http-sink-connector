@@ -2,7 +2,7 @@ package nz.ac.auckland.kafka.http.sink.request;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import nz.ac.auckland.kafka.http.sink.HttpSinkConnectorConfig;
+import com.google.gson.JsonSyntaxException;
 import nz.ac.auckland.kafka.http.sink.model.KafkaRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,7 +13,6 @@ import java.net.SocketTimeoutException;
 import java.util.Arrays;
 import java.util.List;
 
-import static nz.ac.auckland.kafka.http.sink.HttpSinkConnectorConfig.HEADER_SEPERATOR_DEFAULT;
 
 public class ApiRequest implements Request{
 
@@ -33,18 +32,21 @@ public class ApiRequest implements Request{
     }
 
     @Override
-    public ApiRequest setHeaders(String headerString, String traceId) {
-        if(HttpSinkConnectorConfig.nonJsonHeader) {
-            setNonJsonHeaders(headerString);
-        }else if(headerString != null && headerString.trim().length() > 0 ) {
-            log.debug("Processing headers: {}", headerString);
-            JsonObject headers = new JsonParser().parse(headerString).getAsJsonObject();
+    public ApiRequest setHeaders(String headerString, String traceId, String separator) {
 
-            log.debug("headers: {}", headers.toString());
-            for (String headerKey : headers.keySet()) {
-                log.debug("Setting header property: {}", headerKey);
-                connection.setRequestProperty(headerKey, headers.get(headerKey).getAsString());
+        try{
+            if(headerString != null && headerString.trim().length() > 0 ) {
+                log.debug("Processing headers: {}", headerString);
+                JsonObject headers = new JsonParser().parse(headerString).getAsJsonObject();
+
+                log.debug("headers: {}", headers.toString());
+                for (String headerKey : headers.keySet()) {
+                    log.debug("Setting header property: {}", headerKey);
+                    connection.setRequestProperty(headerKey, headers.get(headerKey).getAsString());
+                }
             }
+        }catch(JsonSyntaxException ex){
+            setNonJsonHeaders(headerString, separator);
         }
         addCorrelationIdHeader(traceId);
         addInfoHeader();
@@ -52,9 +54,9 @@ public class ApiRequest implements Request{
         return this;
     }
 
-    private void setNonJsonHeaders(String headers){
-        log.debug("Processing Non json headers: {}, separator: {} ", headers, HEADER_SEPERATOR_DEFAULT);
-        for (String headerKeyValue : headers.split(HEADER_SEPERATOR_DEFAULT)) {
+    private void setNonJsonHeaders(String headers, String separator){
+        log.debug("Processing Non json headers: {}, separator: {} ", headers, separator);
+        for (String headerKeyValue : headers.split(separator)) {
             if (headerKeyValue.contains(":")) {
                 String key = headerKeyValue.split(":")[0];
                 String value = headerKeyValue.split(":")[1];

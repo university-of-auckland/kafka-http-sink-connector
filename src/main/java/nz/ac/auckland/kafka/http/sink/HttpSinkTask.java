@@ -1,6 +1,7 @@
 package nz.ac.auckland.kafka.http.sink;
 
 import nz.ac.auckland.kafka.http.sink.request.ApiRequestInvoker;
+import nz.ac.auckland.kafka.http.sink.util.TraceIdGenerator;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.connect.sink.SinkRecord;
@@ -17,10 +18,15 @@ public class HttpSinkTask extends SinkTask {
 
   private HttpSinkConnectorConfig config;
   private ApiRequestInvoker apiRequestInvoker;
-
+  private String traceId;
 
   @Override
   public void start(final Map<String, String> props) {
+    String connectorName = context.configs().get("name");
+    traceId = TraceIdGenerator.generateTraceId(connectorName);
+    MDC.put("X-B3-TraceId",traceId);
+    MDC.put("X-B3-SpanId",traceId);
+    MDC.put("X-B3-Info", "connection=" + connectorName);
     log.info("Starting task for {} ", context.configs().get("name"));
     config = new HttpSinkConnectorConfig(props);
     apiRequestInvoker = new ApiRequestInvoker(config, context);
@@ -32,7 +38,7 @@ public class HttpSinkTask extends SinkTask {
     if (records.isEmpty()) {
       return;
     }
-    apiRequestInvoker.invoke(records);
+    apiRequestInvoker.invoke(records, traceId);
   }
 
   @Override
@@ -41,6 +47,9 @@ public class HttpSinkTask extends SinkTask {
   }
 
   public void stop() {
+    MDC.put("X-B3-TraceId",traceId);
+    MDC.put("X-B3-SpanId",traceId);
+    MDC.put("X-B3-Info", "connection=" + context.configs().get("name"));
     log.info("Stopping task for {}", context.configs().get("name"));
     MDC.clear();
   }

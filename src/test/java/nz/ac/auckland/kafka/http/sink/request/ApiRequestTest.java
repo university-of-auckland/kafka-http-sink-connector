@@ -1,6 +1,5 @@
 package nz.ac.auckland.kafka.http.sink.request;
 
-import nz.ac.auckland.kafka.http.sink.HttpSinkConnectorConfig;
 import nz.ac.auckland.kafka.http.sink.model.KafkaRecord;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,6 +15,7 @@ import java.net.HttpURLConnection;
 import java.nio.charset.Charset;
 import java.util.List;
 
+import static nz.ac.auckland.kafka.http.sink.HttpSinkConnectorConfig.HEADER_SEPERATOR_DEFAULT;
 import static org.mockito.Mockito.*;
 
 class ApiRequestTest {
@@ -43,7 +43,7 @@ class ApiRequestTest {
         ArgumentCaptor<String> connectionPropsCaptor = ArgumentCaptor.forClass(String.class);
 
         ApiRequest apiRequest = new ApiRequest(connection,kafkaRecord);
-        apiRequest.setHeaders(headers, "TRACE_ID");
+        apiRequest.setHeaders(headers, "TRACE_ID", HEADER_SEPERATOR_DEFAULT);
 
         verify(connection, times(5))
                 .setRequestProperty(connectionPropsCaptor.capture(),connectionPropsCaptor.capture());
@@ -64,13 +64,12 @@ class ApiRequestTest {
     void Test_correct_header_when_noJson_custom_headers_passed(){
 
         String headers = "Content-type:application/json|apikey:API_KEY";
-        HttpSinkConnectorConfig.nonJsonHeader = true;
         when(kafkaRecord.getTopic()).thenReturn("nz-ac-auckland-person");
         when(kafkaRecord.getOffset()).thenReturn(99L);
         ArgumentCaptor<String> connectionPropsCaptor = ArgumentCaptor.forClass(String.class);
 
         ApiRequest apiRequest = new ApiRequest(connection,kafkaRecord);
-        apiRequest.setHeaders(headers, "TRACE_ID");
+        apiRequest.setHeaders(headers, "TRACE_ID", HEADER_SEPERATOR_DEFAULT);
 
         verify(connection, times(5))
                 .setRequestProperty(connectionPropsCaptor.capture(),connectionPropsCaptor.capture());
@@ -96,7 +95,7 @@ class ApiRequestTest {
         ArgumentCaptor<String> connectionPropsCaptor = ArgumentCaptor.forClass(String.class);
 
         ApiRequest apiRequest = new ApiRequest(connection,kafkaRecord);
-        apiRequest.setHeaders(headers, "TRACE_ID");
+        apiRequest.setHeaders(headers, "TRACE_ID", HEADER_SEPERATOR_DEFAULT);
 
         verify(connection, times(3))
                 .setRequestProperty(connectionPropsCaptor.capture(),connectionPropsCaptor.capture());

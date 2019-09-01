@@ -32,6 +32,9 @@ public class HttpSinkConnectorConfig extends AbstractConfig {
 
   //TODO: Removed header separator, allow only Json headers
   public static final String HEADER_SEPERATOR = "callback.header.separator";
+  private static final String HEADER_SEPERATOR_DOC = "Separator character used in "
+            + "headers property.";
+  private static final String HEADER_SEPERATOR_DISPLAY = "Header separator";
   public static final String HEADER_SEPERATOR_DEFAULT = "\\|";
 
   private static final String CONNECT_TIMEOUT = "callback.timeout.connect.ms";
@@ -66,11 +69,9 @@ public class HttpSinkConnectorConfig extends AbstractConfig {
   public final int connectTimeout;
   public final int readTimeout;
   public final String headers;
+  public final String headerSeparator;
   public final String[] retryBackoffsec;
   public final ExceptionStrategyHandlerFactory.ExceptionStrategy exceptionStrategy;
-
-  public static boolean nonJsonHeader;
-
 
   public HttpSinkConnectorConfig(ConfigDef config, Map<String, String> parsedConfig) {
     super(config, parsedConfig, false);
@@ -79,6 +80,7 @@ public class HttpSinkConnectorConfig extends AbstractConfig {
     connectTimeout = getInt(CONNECT_TIMEOUT);
     readTimeout = getInt(READ_TIMEOUT);
     headers = getString(HEADERS);
+    headerSeparator = getString(HEADER_SEPERATOR);
     retryBackoffsec = getString(RETRY_BACKOFF_SEC).split(RETRY_BACKOFF_SEC_SEPARATOR);
     exceptionStrategy = ExceptionStrategyHandlerFactory.ExceptionStrategy.valueOf(getString(EXCEPTION_STRATEGY).toUpperCase());
   }
@@ -110,25 +112,25 @@ public class HttpSinkConnectorConfig extends AbstractConfig {
                 ConfigDef.Width.MEDIUM,
                 REQUEST_METHOD_DISPLAY
             ).define(
-                    CONNECT_TIMEOUT,
-                    ConfigDef.Type.INT,
-                    CONNECT_TIMEOUT_DEFAULT,
-                    ConfigDef.Importance.HIGH,
-                    CONNECT_TIMEOUT_DOC,
-                    API_REQUEST,
-                    2,
-                    ConfigDef.Width.MEDIUM,
-                    CONNECT_TIMEOUT_DISPLAY
+                CONNECT_TIMEOUT,
+                ConfigDef.Type.INT,
+                CONNECT_TIMEOUT_DEFAULT,
+                ConfigDef.Importance.HIGH,
+                CONNECT_TIMEOUT_DOC,
+                API_REQUEST,
+                2,
+                ConfigDef.Width.MEDIUM,
+                CONNECT_TIMEOUT_DISPLAY
             ).define(
-                    READ_TIMEOUT,
-                    ConfigDef.Type.INT,
-                    READ_TIMEOUT_DEFAULT,
-                    ConfigDef.Importance.HIGH,
-                    READ_TIMEOUT_DOC,
-                    API_REQUEST,
-                    2,
-                    ConfigDef.Width.MEDIUM,
-                    READ_TIMEOUT_DISPLAY
+                READ_TIMEOUT,
+                ConfigDef.Type.INT,
+                READ_TIMEOUT_DEFAULT,
+                ConfigDef.Importance.HIGH,
+                READ_TIMEOUT_DOC,
+                API_REQUEST,
+                2,
+                ConfigDef.Width.MEDIUM,
+                READ_TIMEOUT_DISPLAY
             ).define(
                 HEADERS,
                 ConfigDef.Type.STRING,
@@ -140,6 +142,16 @@ public class HttpSinkConnectorConfig extends AbstractConfig {
                 3,
                 ConfigDef.Width.MEDIUM,
                 HEADERS_DISPLAY
+            ).define(
+                HEADER_SEPERATOR,
+                ConfigDef.Type.STRING,
+                HEADER_SEPERATOR_DEFAULT,
+                ConfigDef.Importance.HIGH,
+                HEADER_SEPERATOR_DOC,
+                API_REQUEST,
+                4,
+                ConfigDef.Width.SHORT,
+                HEADER_SEPERATOR_DISPLAY
             ).define(
                 RETRY_BACKOFF_SEC,
                 ConfigDef.Type.STRING,
@@ -164,5 +176,4 @@ public class HttpSinkConnectorConfig extends AbstractConfig {
                 EXCEPTION_STRATEGY_DISPLAY
             );
   }
-
 }

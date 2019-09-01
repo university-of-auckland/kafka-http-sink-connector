@@ -5,15 +5,13 @@ import nz.ac.auckland.kafka.http.sink.handler.ExceptionHandler;
 import nz.ac.auckland.kafka.http.sink.handler.ExceptionStrategyHandlerFactory;
 import nz.ac.auckland.kafka.http.sink.handler.StopTaskHandler;
 import nz.ac.auckland.kafka.http.sink.model.KafkaRecord;
+import nz.ac.auckland.kafka.http.sink.util.TraceIdGenerator;
 import org.apache.kafka.connect.sink.SinkRecord;
 import org.apache.kafka.connect.sink.SinkTaskContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
-import javax.xml.bind.DatatypeConverter;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
 
 public class ApiRequestInvoker {
@@ -40,33 +38,16 @@ public class ApiRequestInvoker {
         setExceptionStrategy();
     }
 
-    public void invoke(final Collection<SinkRecord> records){
+    public void invoke(final Collection<SinkRecord> records, String traceId){
         for(SinkRecord record: records){
-            String traceId = generateTraceId(record);
+            String spanHash = this.sinkContext.configs().get("name") + record.topic() + record.kafkaPartition() + record.kafkaOffset();
             MDC.put("X-B3-TraceId",traceId);
-            MDC.put("X-B3-SpanId",traceId);
+            MDC.put("X-B3-SpanId",TraceIdGenerator.generateTraceId(spanHash));
             MDC.put("X-B3-Info", buildLogInfo(record));
             log.info("Processing record: topic={}  partition={} offset={} value={}", record.topic(), record.kafkaPartition(), record.kafkaOffset(), record.value().toString());
             sendAPiRequest(record, traceId);
             MDC.clear();
         }
-    }
-
-
-    private String generateTraceId(SinkRecord record){
-        String trace = this.sinkContext.configs().get("name") + record.topic() + record.kafkaPartition() + record.kafkaOffset();
-
-        try {
-            MessageDigest md = MessageDigest.getInstance("MD5");
-            md.update(trace.getBytes());
-            byte[] digest = md.digest();
-            // As per APM standards keeping the trace limited to 16 chars.
-            trace = DatatypeConverter.printHexBinary(digest).toLowerCase().substring(0,16);
-            return  trace;
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
-        return  trace;
     }
 
     private String buildLogInfo(SinkRecord record) {
@@ -84,7 +65,7 @@ public class ApiRequestInvoker {
         KafkaRecord kafkaRecord = new KafkaRecord(record);
         try {
             requestBuilder.createRequest(config,kafkaRecord)
-                         .setHeaders(config.headers, traceId)
+                         .setHeaders(config.headers, traceId, config.headerSeparator)
                          .sendPayload(record.value().toString());
         }catch (ApiResponseErrorException e) {
             exceptionHandler.handel(e);
