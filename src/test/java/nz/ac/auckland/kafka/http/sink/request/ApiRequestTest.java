@@ -108,8 +108,57 @@ class ApiRequestTest {
         Assertions.assertEquals("nz-ac-auckland-person",connProps.get(5));
     }
 
+
     @Test
-    void Test_sendPayload_throws_expectation_if_retry_true() throws IOException {
+    void Test_sendPayload_throws_expectation_if_invalid_Json_response() throws IOException {
+
+
+        String response = "{ \"message\":\"Unable to process. An unhandled exception has been thrown.\"," +
+                "   \"retry\":false";
+        when(connection.getOutputStream()).thenReturn(outputStreamMock);
+        when(connection.getInputStream()).thenReturn(new ByteArrayInputStream(response.getBytes(Charset.forName("UTF-8"))));
+
+        ApiRequest apiRequest = new ApiRequest(connection,kafkaRecord);
+
+        Assertions.assertThrows(ApiResponseErrorException.class, () ->
+                apiRequest.sendPayload("test"));
+
+    }
+
+    @Test
+    void Test_sendPayload_throws_expectation_if_text_response() throws IOException {
+
+
+        String response = "error";
+        when(connection.getOutputStream()).thenReturn(outputStreamMock);
+        when(connection.getInputStream()).thenReturn(new ByteArrayInputStream(response.getBytes(Charset.forName("UTF-8"))));
+
+        ApiRequest apiRequest = new ApiRequest(connection,kafkaRecord);
+
+        Assertions.assertThrows(ApiResponseErrorException.class, () ->
+                apiRequest.sendPayload("test"));
+
+    }
+
+    @Test
+    void Test_sendPayload_throws_expectation_if_non200_retry_true() throws IOException {
+
+
+        String response = "{ \"message\":\"Unable to process. An unhandled exception has been thrown.\"," +
+                "   \"retry\":true}";
+        when(connection.getOutputStream()).thenReturn(outputStreamMock);
+        when(connection.getInputStream()).thenCallRealMethod();
+        when(connection.getErrorStream()).thenReturn(new ByteArrayInputStream(response.getBytes(Charset.forName("UTF-8"))));
+
+        ApiRequest apiRequest = new ApiRequest(connection,kafkaRecord);
+
+        Assertions.assertThrows(ApiResponseErrorException.class, () ->
+                apiRequest.sendPayload("test"));
+
+    }
+
+    @Test
+    void Test_sendPayload_throws_expectation_if_200_retry_true() throws IOException {
 
 
         String response = "{ \"message\":\"Unable to process. An unhandled exception has been thrown.\"," +
@@ -120,12 +169,28 @@ class ApiRequestTest {
         ApiRequest apiRequest = new ApiRequest(connection,kafkaRecord);
 
         Assertions.assertThrows(ApiResponseErrorException.class, () ->
-            apiRequest.sendPayload("test"));
+                apiRequest.sendPayload("test"));
 
     }
 
     @Test
-    void Test_sendPayload_does_not_throws_expectation_if_retry_false() throws IOException {
+    void Test_sendPayload_does_not_throws_expectation_if_non200_retry_false() throws IOException {
+
+
+        String response = "{ \"message\":\"User Not Found\"," +
+                "   \"retry\":false}";
+        when(connection.getOutputStream()).thenReturn(outputStreamMock);
+        when(connection.getOutputStream()).thenReturn(outputStreamMock);
+        when(connection.getInputStream()).thenReturn(new ByteArrayInputStream(response.getBytes(Charset.forName("UTF-8"))));
+
+        ApiRequest apiRequest = new ApiRequest(connection,kafkaRecord);
+
+        Assertions.assertDoesNotThrow (() -> apiRequest.sendPayload("test"));
+
+    }
+
+    @Test
+    void Test_sendPayload_does_not_throws_expectation_if_200_retry_false() throws IOException {
 
 
         String response = "{ \"message\":\"OK\"," +

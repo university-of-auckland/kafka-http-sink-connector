@@ -23,7 +23,9 @@ public class ApiRequest implements Request{
     private HttpURLConnection connection;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     private KafkaRecord kafkaRecord;
-    private static final List<Integer> CALLBACK_API_DOWN_HTTP_STATUS_CODE = Arrays.asList(502,503,504);
+    private static final List<Integer> CALLBACK_API_DOWN_HTTP_STATUS_CODE = Arrays.asList(502,503,504,401,403,405);
+
+    private enum ReponseTypes {ERROR , SUCCESS}
 
 
     ApiRequest(HttpURLConnection connection, KafkaRecord kafkaRecord) {
@@ -94,6 +96,9 @@ public class ApiRequest implements Request{
             validateResponse();
         }catch (ApiResponseErrorException e) {
             throw e;
+        }catch (IllegalStateException | JsonSyntaxException s){
+            log.error("Unable to validate response. \n Error:{}", s.getLocalizedMessage());
+            throw new ApiResponseErrorException(s.getLocalizedMessage(), kafkaRecord);
         }catch (Exception e) {
             throw new ApiRequestErrorException(e.getLocalizedMessage(), kafkaRecord);
         } finally {
@@ -123,27 +128,25 @@ public class ApiRequest implements Request{
 
         boolean retry = response.get("retry").getAsBoolean();
         if (retry) {
-            throw new ApiResponseErrorException("Unable to process message.", kafkaRecord);
+            throw new ApiResponseErrorException("Unable to validate response.", kafkaRecord);
         }
     }
 
     private String getResponse() {
         try {
-            return readResponse(connection.getInputStream());
+            return readResponse(connection.getInputStream(), ReponseTypes.SUCCESS);
         } catch (IOException e) {
             try {
-                String error = readResponse(connection.getErrorStream());
-                log.error("Error Validating response. \n Error:{}", error);
-                throw new ApiRequestErrorException(error, kafkaRecord);
+                return readResponse(connection.getErrorStream(), ReponseTypes.ERROR);
             } catch (IOException e1) {
-                log.error("Error Validating response. \n Error:{}", e1.getLocalizedMessage());
-                throw new ApiRequestErrorException(e1.getLocalizedMessage(), kafkaRecord);
+                log.error("Error Reading response. \n Error:{}", e1.getLocalizedMessage());
+                throw new ApiResponseErrorException(e1.getLocalizedMessage(), kafkaRecord);
             }
 
         }
     }
 
-    private String readResponse(InputStream stream) throws IOException {
+    private String readResponse(InputStream stream, ReponseTypes responseType) throws IOException {
         StringBuilder sb;
         try (BufferedReader br = new BufferedReader(new InputStreamReader(stream, STREAM_ENCODING))) {
             sb = new StringBuilder();
@@ -152,7 +155,7 @@ public class ApiRequest implements Request{
                 sb.append(line);
             }
             String response = sb.toString();
-            log.info("Response:{}", response);
+            log.info("Api {} Response:{}", responseType, response);
             return response;
         }
     }
