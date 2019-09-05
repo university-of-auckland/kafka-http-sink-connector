@@ -39,6 +39,10 @@ public class HttpSinkTask extends SinkTask {
       return;
     }
     apiRequestInvoker.invoke(records, traceId);
+
+    //Request a commit of the processed message
+    //else the commit is triggered after the  'offset.flush.interval.ms'
+    context.requestCommit();
   }
 
   @Override
