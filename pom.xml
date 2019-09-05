@@ -3,7 +3,7 @@
 
     <groupId>nz.ac.auckland</groupId>
     <artifactId>uoa-kafka-http-sink-connector</artifactId>
-    <version>1.0.8</version>
+    <version>1.0.9-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>uoa-kafka-http-sink-connector</name>
@@ -20,7 +20,7 @@
         <url>https://stash.auckland.ac.nz/projects/IMA/repos/uoa-kafka-http-sink-connector</url>
         <connection>scm:git:git@stash.auckland.ac.nz/ima/uoa-kafka-http-sink-connector.git</connection>
         <developerConnection>scm:git:git@stash.auckland.ac.nz/ima/uoa-kafka-http-sink-connector.git</developerConnection>
-        <tag>uoa-kafka-http-sink-connector-1.0.8</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <distributionManagement>
