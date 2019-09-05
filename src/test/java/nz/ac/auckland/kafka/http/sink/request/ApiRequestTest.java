@@ -45,19 +45,19 @@ class ApiRequestTest {
         ApiRequest apiRequest = new ApiRequest(connection,kafkaRecord);
         apiRequest.setHeaders(headers, "TRACE_ID", HEADER_SEPERATOR_DEFAULT);
 
-        verify(connection, times(5))
+        verify(connection, times(7))
                 .setRequestProperty(connectionPropsCaptor.capture(),connectionPropsCaptor.capture());
         List<String> connProps = connectionPropsCaptor.getAllValues();
         Assertions.assertEquals("Content-type",connProps.get(0));
         Assertions.assertEquals("application/json",connProps.get(1));
         Assertions.assertEquals("apikey",connProps.get(2));
         Assertions.assertEquals("API_KEY",connProps.get(3));
-        Assertions.assertEquals(ApiRequest.REQUEST_HEADER_CORRELATION_ID_KEY,connProps.get(4));
+        Assertions.assertEquals(ApiRequest.REQUEST_HEADER_TRACE_ID_KEY,connProps.get(4));
         Assertions.assertEquals("TRACE_ID",connProps.get(5));
-        Assertions.assertEquals(ApiRequest.REQUEST_HEADER_INFO_KEY,connProps.get(6));
-        Assertions.assertEquals("topic=nz-ac-auckland-person|partition=0|offset=99",connProps.get(7));
-        Assertions.assertEquals(ApiRequest.REQUEST_HEADER_KAFKA_TOPIC_KEY,connProps.get(8));
-        Assertions.assertEquals("nz-ac-auckland-person",connProps.get(9));
+        Assertions.assertEquals(ApiRequest.REQUEST_HEADER_INFO_KEY,connProps.get(10));
+        Assertions.assertEquals("topic=nz-ac-auckland-person|partition=0|offset=99",connProps.get(11));
+        Assertions.assertEquals(ApiRequest.REQUEST_HEADER_KAFKA_TOPIC_KEY,connProps.get(12));
+        Assertions.assertEquals("nz-ac-auckland-person",connProps.get(13));
     }
 
     @Test
@@ -71,19 +71,19 @@ class ApiRequestTest {
         ApiRequest apiRequest = new ApiRequest(connection,kafkaRecord);
         apiRequest.setHeaders(headers, "TRACE_ID", HEADER_SEPERATOR_DEFAULT);
 
-        verify(connection, times(5))
+        verify(connection, times(7))
                 .setRequestProperty(connectionPropsCaptor.capture(),connectionPropsCaptor.capture());
         List<String> connProps = connectionPropsCaptor.getAllValues();
         Assertions.assertEquals("Content-type",connProps.get(0));
         Assertions.assertEquals("application/json",connProps.get(1));
         Assertions.assertEquals("apikey",connProps.get(2));
         Assertions.assertEquals("API_KEY",connProps.get(3));
-        Assertions.assertEquals(ApiRequest.REQUEST_HEADER_CORRELATION_ID_KEY,connProps.get(4));
+        Assertions.assertEquals(ApiRequest.REQUEST_HEADER_TRACE_ID_KEY,connProps.get(4));
         Assertions.assertEquals("TRACE_ID",connProps.get(5));
-        Assertions.assertEquals(ApiRequest.REQUEST_HEADER_INFO_KEY,connProps.get(6));
-        Assertions.assertEquals("topic=nz-ac-auckland-person|partition=0|offset=99",connProps.get(7));
-        Assertions.assertEquals(ApiRequest.REQUEST_HEADER_KAFKA_TOPIC_KEY,connProps.get(8));
-        Assertions.assertEquals("nz-ac-auckland-person",connProps.get(9));
+        Assertions.assertEquals(ApiRequest.REQUEST_HEADER_INFO_KEY,connProps.get(10));
+        Assertions.assertEquals("topic=nz-ac-auckland-person|partition=0|offset=99",connProps.get(11));
+        Assertions.assertEquals(ApiRequest.REQUEST_HEADER_KAFKA_TOPIC_KEY,connProps.get(12));
+        Assertions.assertEquals("nz-ac-auckland-person",connProps.get(13));
     }
 
     @Test
@@ -97,15 +97,15 @@ class ApiRequestTest {
         ApiRequest apiRequest = new ApiRequest(connection,kafkaRecord);
         apiRequest.setHeaders(headers, "TRACE_ID", HEADER_SEPERATOR_DEFAULT);
 
-        verify(connection, times(3))
+        verify(connection, times(5))
                 .setRequestProperty(connectionPropsCaptor.capture(),connectionPropsCaptor.capture());
         List<String> connProps = connectionPropsCaptor.getAllValues();
-        Assertions.assertEquals(ApiRequest.REQUEST_HEADER_CORRELATION_ID_KEY,connProps.get(0));
+        Assertions.assertEquals(ApiRequest.REQUEST_HEADER_TRACE_ID_KEY,connProps.get(0));
         Assertions.assertEquals("TRACE_ID",connProps.get(1));
-        Assertions.assertEquals(ApiRequest.REQUEST_HEADER_INFO_KEY,connProps.get(2));
-        Assertions.assertEquals("topic=nz-ac-auckland-person|partition=0|offset=99",connProps.get(3));
-        Assertions.assertEquals(ApiRequest.REQUEST_HEADER_KAFKA_TOPIC_KEY,connProps.get(4));
-        Assertions.assertEquals("nz-ac-auckland-person",connProps.get(5));
+        Assertions.assertEquals(ApiRequest.REQUEST_HEADER_INFO_KEY,connProps.get(6));
+        Assertions.assertEquals("topic=nz-ac-auckland-person|partition=0|offset=99",connProps.get(7));
+        Assertions.assertEquals(ApiRequest.REQUEST_HEADER_KAFKA_TOPIC_KEY,connProps.get(8));
+        Assertions.assertEquals("nz-ac-auckland-person",connProps.get(9));
     }
 
 

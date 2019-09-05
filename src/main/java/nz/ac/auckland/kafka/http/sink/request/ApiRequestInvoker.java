@@ -41,11 +41,12 @@ public class ApiRequestInvoker {
     public void invoke(final Collection<SinkRecord> records, String traceId){
         for(SinkRecord record: records){
             String spanHash = this.sinkContext.configs().get("name") + record.topic() + record.kafkaPartition() + record.kafkaOffset();
+            String spanId = TraceIdGenerator.generateTraceId(spanHash);
             MDC.put("X-B3-TraceId",traceId);
-            MDC.put("X-B3-SpanId",TraceIdGenerator.generateTraceId(spanHash));
+            MDC.put("X-B3-SpanId",spanId);
             MDC.put("X-B3-Info", buildLogInfo(record));
             log.info("Processing record: topic={}  partition={} offset={} value={}", record.topic(), record.kafkaPartition(), record.kafkaOffset(), record.value().toString());
-            sendAPiRequest(record, traceId);
+            sendAPiRequest(record , spanId);
             MDC.clear();
         }
     }
@@ -61,11 +62,11 @@ public class ApiRequestInvoker {
                 record.kafkaOffset();
     }
 
-    private void sendAPiRequest(SinkRecord record, String traceId){
+    private void sendAPiRequest(SinkRecord record, String spanId){
         KafkaRecord kafkaRecord = new KafkaRecord(record);
         try {
             requestBuilder.createRequest(config,kafkaRecord)
-                         .setHeaders(config.headers, traceId, config.headerSeparator)
+                         .setHeaders(config.headers, spanId, config.headerSeparator)
                          .sendPayload(record.value().toString());
         }catch (ApiResponseErrorException e) {
             exceptionHandler.handel(e);

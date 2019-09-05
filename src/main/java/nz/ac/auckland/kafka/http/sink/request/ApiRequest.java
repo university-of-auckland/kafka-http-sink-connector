@@ -16,7 +16,11 @@ import java.util.List;
 
 public class ApiRequest implements Request{
 
-    static final String REQUEST_HEADER_CORRELATION_ID_KEY = "X-B3-TraceId";
+    static final String REQUEST_HEADER_TRACE_ID_KEY = "X-B3-TraceId";
+    static final String REQUEST_HEADER_SPAN_ID_KEY = "X-B3-SpanId";
+    static final String REQUEST_HEADER_SAMPLED_KEY = "X-B3-Sampled";
+    static final String REQUEST_HEADER_SAMPLED_VALUE = "Defer";
+
     static final String REQUEST_HEADER_KAFKA_TOPIC_KEY = "X-Kafka-Topic";
     static final String REQUEST_HEADER_INFO_KEY = "X-B3-Info" ;
     private final static String STREAM_ENCODING = "UTF-8";
@@ -34,7 +38,7 @@ public class ApiRequest implements Request{
     }
 
     @Override
-    public ApiRequest setHeaders(String headerString, String traceId, String separator) {
+    public ApiRequest setHeaders(String headerString, String spanId, String separator) {
 
         try{
             if(headerString != null && headerString.trim().length() > 0 ) {
@@ -50,7 +54,7 @@ public class ApiRequest implements Request{
         }catch(JsonSyntaxException ex){
             setNonJsonHeaders(headerString, separator);
         }
-        addCorrelationIdHeader(traceId);
+        addB3Header(spanId);
         addInfoHeader();
         addTopicHeader();
         return this;
@@ -74,9 +78,11 @@ public class ApiRequest implements Request{
         connection.setRequestProperty(REQUEST_HEADER_KAFKA_TOPIC_KEY, kafkaRecord.getTopic());
     }
 
-    private void addCorrelationIdHeader(String traceId) {
-        log.debug("Adding correlationId header: {} = {} ",REQUEST_HEADER_CORRELATION_ID_KEY, traceId);
-        connection.setRequestProperty(REQUEST_HEADER_CORRELATION_ID_KEY,traceId );
+    private void addB3Header(String traceId) {
+        log.debug("Adding B3 headers");
+        connection.setRequestProperty(REQUEST_HEADER_TRACE_ID_KEY,traceId );
+        connection.setRequestProperty(REQUEST_HEADER_SPAN_ID_KEY,traceId );
+        connection.setRequestProperty(REQUEST_HEADER_SAMPLED_KEY,REQUEST_HEADER_SAMPLED_VALUE );
     }
     private void addInfoHeader() {
         String info = "topic=" + kafkaRecord.getTopic() + "|partition=" + kafkaRecord.getPartition()
