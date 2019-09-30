@@ -29,7 +29,7 @@ public class ProgressiveBackoffStopTaskHandler implements ExceptionHandler {
     @Override
     public void handel(CallBackApiException e) {
         if (retryIndex >= maxRetries) {
-            log.error("Progressive back-off stop Strategy: Stopping the task after {} retries. \n Errored record: {}",maxRetries,e.getRecord());
+            log.error("Progressive back-off stop Strategy: Stopping task after {} retries. \n Errored record: {}",maxRetries,e.getRecord());
             retryIndex = 0;
             throw new ConnectException(e);
         } else {
@@ -39,5 +39,10 @@ public class ProgressiveBackoffStopTaskHandler implements ExceptionHandler {
             retryIndex++;
             throw new RetriableException(e);
         }
+    }
+
+    @Override
+    public void reset(){
+        retryIndex = 0;
     }
 }

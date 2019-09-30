@@ -16,15 +16,15 @@ import java.util.Map;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-public class ProgressiveBackoffDropHandlerTest {
+class ProgressiveBackoffDropHandlerTest {
 
     @Mock
     private SinkTaskContext sinkTaskContext;
 
-    HttpSinkConnectorConfig  config;
+    private HttpSinkConnectorConfig  config;
 
     @BeforeEach
-    public void initMocks() {
+    void initMocks() {
         MockitoAnnotations.initMocks(this);
         Map<String,String> props= new HashMap<>();
         props.put(HttpSinkConnectorConfig.HTTP_API_URL,"http://mockbin.com");
@@ -37,9 +37,28 @@ public class ProgressiveBackoffDropHandlerTest {
     }
 
     @Test
-    public void Test_message_dropped_after_set_retries_and_committed(){
+    void Test_message_dropped_after_set_retries_and_committed(){
 
         ProgressiveBackoffDropHandler handler = new ProgressiveBackoffDropHandler(config,sinkTaskContext);
+
+        //First Try 5 sec
+        Assertions.assertThrows(RetriableException.class, () -> invokeHandel(handler));
+        //Second Try 10 sec
+        Assertions.assertThrows(RetriableException.class, () -> invokeHandel(handler));
+        //Drop message
+        Assertions.assertDoesNotThrow(()-> invokeHandel(handler));
+
+        verify(sinkTaskContext, times(1)).requestCommit();
+    }
+
+    @Test
+    void Test_second_message_dropped_after_set_retries_and_first_was_success_in_between(){
+
+        ProgressiveBackoffDropHandler handler = new ProgressiveBackoffDropHandler(config,sinkTaskContext);
+
+        //First Try 5 sec
+        Assertions.assertThrows(RetriableException.class, () -> invokeHandel(handler));
+        handler.reset();// when message processed reset the handler
 
         //First Try 5 sec
         Assertions.assertThrows(RetriableException.class, () -> invokeHandel(handler));

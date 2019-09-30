@@ -39,4 +39,10 @@ public class ProgressiveBackoffDropHandler implements ExceptionHandler {
             throw new RetriableException(e);
         }
     }
+
+    @Override
+    public void reset(){
+        retryIndex = 0;
+    }
+
 }

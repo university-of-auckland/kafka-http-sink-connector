@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.net.HttpURLConnection;
-import java.net.SocketTimeoutException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -27,9 +26,9 @@ public class ApiRequest implements Request{
     private HttpURLConnection connection;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     private KafkaRecord kafkaRecord;
-    private static final List<Integer> CALLBACK_API_DOWN_HTTP_STATUS_CODE = Arrays.asList(502,503,504,401,403,405);
+    private static final List<Integer> CALLBACK_API_DOWN_HTTP_STATUS_CODE = Arrays.asList(502,503,504,401,403,405,406);
 
-    private enum ReponseTypes {ERROR , SUCCESS}
+    private enum ResponseTypes {ERROR , SUCCESS}
 
 
     ApiRequest(HttpURLConnection connection, KafkaRecord kafkaRecord) {
@@ -98,13 +97,9 @@ public class ApiRequest implements Request{
             writer.flush();
             writer.close();
             log.info("Submitted request: url={} payload={}",connection.getURL(), payload);
-            isSendRequestSuccessful();
-            validateResponse();
+            processResponse();
         }catch (ApiResponseErrorException e) {
             throw e;
-        }catch (IllegalStateException | JsonSyntaxException s){
-            log.error("Unable to validate response. \n Error:{}", s.getLocalizedMessage());
-            throw new ApiResponseErrorException(s.getLocalizedMessage(), kafkaRecord);
         }catch (Exception e) {
             throw new ApiRequestErrorException(e.getLocalizedMessage(), kafkaRecord);
         } finally {
@@ -112,38 +107,42 @@ public class ApiRequest implements Request{
         }
     }
 
-    private void isSendRequestSuccessful() {
+    private void processResponse() {
         try {
             int statusCode = connection.getResponseCode();
             log.info("Response Status: {}", statusCode);
-            if(CALLBACK_API_DOWN_HTTP_STATUS_CODE.contains(statusCode)){
+            RetryIndicator retryIndicator = getResponseIndicator();
+            log.info("Retry Indicator: {}", retryIndicator);
+            if(retryIndicator == RetryIndicator.UNKNOWN
+                    && CALLBACK_API_DOWN_HTTP_STATUS_CODE.contains(statusCode)){
                 throw new ApiRequestErrorException("Unable to connect to callback API: "
                         + " received status: " + statusCode, kafkaRecord);
+            } else if (retryIndicator.shouldRetry) {
+                throw new ApiResponseErrorException("Received response retry=true", kafkaRecord);
             }
-        }catch (SocketTimeoutException e) {
-            log.warn("Unable to obtain response from callback API. \n Error:{} ",e.getMessage());
-            throw new ApiResponseErrorException(e.getLocalizedMessage());
+
         } catch (IOException e) {
-            log.warn("Error checking if Send Request was Successful.");
-            e.printStackTrace();
+            log.warn("Error checking if Send Request was Successful.",e.getMessage());
+            throw new ApiResponseErrorException(e.getLocalizedMessage());
         }
     }
 
-    private void validateResponse() {
-        JsonObject response =  new JsonParser().parse(getResponse()).getAsJsonObject();
-
-        boolean retry = response.get("retry").getAsBoolean();
-        if (retry) {
-            throw new ApiResponseErrorException("Unable to validate response.", kafkaRecord);
+    private RetryIndicator getResponseIndicator() {
+        try {
+            JsonObject response = new JsonParser().parse(getResponse()).getAsJsonObject();
+            return response.get("retry").getAsBoolean()? RetryIndicator.RETRY : RetryIndicator.NO_RETRY ;
+        }catch (Exception ex){
+            log.warn("Json response with 'retry' field with not found. Assuming retry=true.");
+            return RetryIndicator.UNKNOWN;
         }
     }
 
     private String getResponse() {
         try {
-            return readResponse(connection.getInputStream(), ReponseTypes.SUCCESS);
+            return readResponse(connection.getInputStream(), ResponseTypes.SUCCESS);
         } catch (IOException e) {
             try {
-                return readResponse(connection.getErrorStream(), ReponseTypes.ERROR);
+                return readResponse(connection.getErrorStream(), ResponseTypes.ERROR);
             } catch (IOException e1) {
                 log.error("Error Reading response. \n Error:{}", e1.getLocalizedMessage());
                 throw new ApiResponseErrorException(e1.getLocalizedMessage(), kafkaRecord);
@@ -152,7 +151,7 @@ public class ApiRequest implements Request{
         }
     }
 
-    private String readResponse(InputStream stream, ReponseTypes responseType) throws IOException {
+    private String readResponse(InputStream stream, ResponseTypes responseType) throws IOException {
         StringBuilder sb;
         try (BufferedReader br = new BufferedReader(new InputStreamReader(stream, STREAM_ENCODING))) {
             sb = new StringBuilder();

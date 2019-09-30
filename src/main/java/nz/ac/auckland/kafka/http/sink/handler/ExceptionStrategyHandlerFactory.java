@@ -12,8 +12,8 @@ public class ExceptionStrategyHandlerFactory {
         STOP_TASK
     }
 
-    public static ExceptionHandler getInstance(HttpSinkConnectorConfig config, SinkTaskContext context){
-        switch(config.exceptionStrategy){
+    public static ExceptionHandler getInstance(ExceptionStrategy exceptionStrategy,HttpSinkConnectorConfig config, SinkTaskContext context){
+        switch(exceptionStrategy){
             case PROGRESS_BACK_OFF_DROP_MESSAGE: return new ProgressiveBackoffDropHandler(config,context);
             case PROGRESS_BACK_OFF_STOP_TASK: return new ProgressiveBackoffStopTaskHandler(config,context);
             case DROP_MESSAGE: return new DropMessageHandler(context);

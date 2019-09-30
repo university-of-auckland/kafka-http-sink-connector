@@ -3,7 +3,6 @@ package nz.ac.auckland.kafka.http.sink.request;
 import nz.ac.auckland.kafka.http.sink.HttpSinkConnectorConfig;
 import nz.ac.auckland.kafka.http.sink.handler.ExceptionHandler;
 import nz.ac.auckland.kafka.http.sink.handler.ExceptionStrategyHandlerFactory;
-import nz.ac.auckland.kafka.http.sink.handler.StopTaskHandler;
 import nz.ac.auckland.kafka.http.sink.model.KafkaRecord;
 import nz.ac.auckland.kafka.http.sink.util.TraceIdGenerator;
 import org.apache.kafka.connect.sink.SinkRecord;
@@ -14,13 +13,16 @@ import org.slf4j.MDC;
 
 import java.util.Collection;
 
+import static nz.ac.auckland.kafka.http.sink.handler.ExceptionStrategyHandlerFactory.ExceptionStrategy.PROGRESS_BACK_OFF_STOP_TASK;
+
 public class ApiRequestInvoker {
 
     private final RequestBuilder requestBuilder;
     private final HttpSinkConnectorConfig config;
     private final SinkTaskContext sinkContext;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
-    private ExceptionHandler exceptionHandler;
+    private ExceptionHandler responseExceptionHandler;
+    private ExceptionHandler requestExceptionHandler;
 
     public ApiRequestInvoker(final HttpSinkConnectorConfig config, final SinkTaskContext context) {
         log.debug("Initializing ApiRequestInvoker");
@@ -68,14 +70,21 @@ public class ApiRequestInvoker {
             requestBuilder.createRequest(config,kafkaRecord)
                          .setHeaders(config.headers, spanId, config.headerSeparator)
                          .sendPayload(record.value().toString());
+            //Reset the handler retryIndex to zero
+            responseExceptionHandler.reset();
+            requestExceptionHandler.reset();
         }catch (ApiResponseErrorException e) {
-            exceptionHandler.handel(e);
+            responseExceptionHandler.handel(e);
         }catch (ApiRequestErrorException e){
-            new StopTaskHandler().handel(e);
+            requestExceptionHandler.handel(e);
         }
     }
 
     private void setExceptionStrategy() {
-        exceptionHandler = ExceptionStrategyHandlerFactory.getInstance(config, sinkContext);
+        requestExceptionHandler = ExceptionStrategyHandlerFactory
+                .getInstance(PROGRESS_BACK_OFF_STOP_TASK, config, sinkContext);
+        responseExceptionHandler = ExceptionStrategyHandlerFactory
+                .getInstance(config.exceptionStrategy, config, sinkContext);
+
     }
 }

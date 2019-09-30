@@ -66,6 +66,16 @@ One can opt for one of the below exception strategies to retry the failed callba
   <br> Immediately stop the connector. **No new messages in the que would be consumed.** `The connector would have to be manually restarted so that it starts to consume messages again.`
   <br> Use this strategy if you do not want to loose any message. The application is continuously monitored for any errors and connector restart can be manually triggered.
      
+> - If the response does not contain a retry indicator the connector would assume retry= true and will retry the message as per the back-off strategy.
+> - If their is no retry indicator and the HTTP status is one of the below the connector will retry the message as per the back-off strategy and STOP if not successful.
+>   - 502 Bad Gateway - The server was acting as a gateway or proxy and received an invalid response from the upstream server.
+>   - 503 Service Unavailable - The server cannot handle the request (because it is overloaded or down for maintenance). Generally, this is a temporary state.
+>   - 504 Gateway Timeout - The server was acting as a gateway or proxy and did not receive a timely response from the upstream server.
+>   - 401 Unauthorised - The server rejected the request because the user is not authorised (e.g. apikey provided is incorrect) 
+>   - 403 Forbidden - The server rejected the request because the use does not have the rights to perform the action (e.g. ACL configured for the consumer is incorrect)
+>   - 405 Method Not Allowed - The server rejected the request because the request method (configured in callback.request.methods ) was not accepted
+>   - 406 Not Acceptable - The server rejected the request because the content type expected was incorrect (configured in callback.request.headers)      
+     
 ### Kafka connect rest API
 
 - Create new connection

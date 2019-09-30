@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 public class StopTaskHandler implements ExceptionHandler{
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
-    public StopTaskHandler() {
+    StopTaskHandler() {
         log.info("Exception strategy: Stop task strategy.");
     }
 

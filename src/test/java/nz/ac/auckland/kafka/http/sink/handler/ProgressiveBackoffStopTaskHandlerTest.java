@@ -17,15 +17,15 @@ import java.util.Map;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-public class ProgressiveBackoffStopTaskHandlerTest {
+class ProgressiveBackoffStopTaskHandlerTest {
 
     @Mock
     private SinkTaskContext sinkTaskContext;
 
-    HttpSinkConnectorConfig  config;
+    private HttpSinkConnectorConfig  config;
 
     @BeforeEach
-    public void initMocks() {
+    void initMocks() {
         MockitoAnnotations.initMocks(this);
         Map<String,String> props= new HashMap<>();
         props.put(HttpSinkConnectorConfig.HTTP_API_URL,"http://mockbin.com");
@@ -38,7 +38,7 @@ public class ProgressiveBackoffStopTaskHandlerTest {
     }
 
     @Test
-    public void Test_task_stopped_after_set_retries_no_commit(){
+    void Test_task_stopped_after_set_retries_no_commit(){
 
         ProgressiveBackoffStopTaskHandler handler = new ProgressiveBackoffStopTaskHandler(config,sinkTaskContext);
 
@@ -51,6 +51,26 @@ public class ProgressiveBackoffStopTaskHandlerTest {
 
         verify(sinkTaskContext, times(0)).requestCommit();
     }
+
+    @Test
+    void Test_second_message_dropped_after_set_retries_and_first_was_success_in_between(){
+
+        ProgressiveBackoffStopTaskHandler handler = new ProgressiveBackoffStopTaskHandler(config,sinkTaskContext);
+
+        //First Try 5 sec
+        Assertions.assertThrows(RetriableException.class, () -> invokeHandel(handler));
+        handler.reset();// when message processed reset the handler
+
+        //First Try 5 sec
+        Assertions.assertThrows(RetriableException.class, () -> invokeHandel(handler));
+        //Second Try 10 sec
+        Assertions.assertThrows(RetriableException.class, () -> invokeHandel(handler));
+        //Stop task
+        Assertions.assertThrows(ConnectException.class, () -> invokeHandel(handler));
+
+        verify(sinkTaskContext, times(0)).requestCommit();
+    }
+
 
     private void invokeHandel(ExceptionHandler handler){
         handler.handel(new ApiResponseErrorException("Error"));
