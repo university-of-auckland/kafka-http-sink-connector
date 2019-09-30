@@ -59,7 +59,7 @@ class ApiRequestInvokerTest {
 
         ApiRequestInvoker invoker = new ApiRequestInvoker(config,sinkTaskContext, apiRequestBuilder);
         Assertions.assertThrows(RetriableException.class, () ->
-                invoker.invoke(records, "TRACE_ID"));
+                invoker.invoke(records));
 
 
         verify(apiRequestBuilder, times(1))
@@ -76,7 +76,7 @@ class ApiRequestInvokerTest {
 
         ApiRequestInvoker invoker = new ApiRequestInvoker(config,sinkTaskContext, apiRequestBuilder);
         Assertions.assertThrows(ConnectException.class, () ->
-                invoker.invoke(records, "TRACE_ID"));
+                invoker.invoke(records));
 
 
         verify(apiRequestBuilder, times(1))

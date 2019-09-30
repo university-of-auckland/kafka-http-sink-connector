@@ -40,15 +40,15 @@ public class ApiRequestInvoker {
         setExceptionStrategy();
     }
 
-    public void invoke(final Collection<SinkRecord> records, String traceId){
+    public void invoke(final Collection<SinkRecord> records){
         for(SinkRecord record: records){
             String spanHash = this.sinkContext.configs().get("name") + record.topic() + record.kafkaPartition() + record.kafkaOffset();
-            String spanId = TraceIdGenerator.generateTraceId(spanHash);
+            String traceId = TraceIdGenerator.generateTraceId(spanHash);
             MDC.put("X-B3-TraceId",traceId);
-            MDC.put("X-B3-SpanId",spanId);
+            MDC.put("X-B3-SpanId",traceId);
             MDC.put("X-B3-Info", buildLogInfo(record));
             log.info("Processing record: topic={}  partition={} offset={} value={}", record.topic(), record.kafkaPartition(), record.kafkaOffset(), record.value().toString());
-            sendAPiRequest(record , spanId);
+            sendAPiRequest(record , traceId);
             MDC.clear();
         }
     }
