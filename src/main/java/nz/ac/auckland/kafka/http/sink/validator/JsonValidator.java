@@ -13,7 +13,7 @@ public class JsonValidator implements ConfigDef.Validator  {
     @Override
     public void ensureValid(String key, Object json) {
 
-        log.debug("key: {}, value: {}", key , json);
+        log.debug("validating json value for key: {}", key);
         if(json == null || json.toString().trim().length() == 0 ){
             return;
         }
