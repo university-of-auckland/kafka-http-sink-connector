@@ -41,10 +41,9 @@ public class ApiRequest implements Request{
 
         try{
             if(headerString != null && headerString.trim().length() > 0 ) {
-                log.debug("Processing headers: {}", headerString);
+                log.debug("Processing {} headers", headerString.length());
                 JsonObject headers = new JsonParser().parse(headerString).getAsJsonObject();
 
-                log.debug("headers: {}", headers.toString());
                 for (String headerKey : headers.keySet()) {
                     log.debug("Setting header property: {}", headerKey);
                     connection.setRequestProperty(headerKey, headers.get(headerKey).getAsString());
