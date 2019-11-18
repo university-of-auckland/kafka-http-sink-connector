@@ -41,9 +41,8 @@ public class ApiRequest implements Request{
 
         try{
             if(headerString != null && headerString.trim().length() > 0 ) {
-                log.debug("Processing {} headers", headerString.length());
                 JsonObject headers = new JsonParser().parse(headerString).getAsJsonObject();
-
+                log.debug("Processing {} headers", headers.size());
                 for (String headerKey : headers.keySet()) {
                     log.debug("Setting header property: {}", headerKey);
                     connection.setRequestProperty(headerKey, headers.get(headerKey).getAsString());
@@ -59,7 +58,7 @@ public class ApiRequest implements Request{
     }
 
     private void setNonJsonHeaders(String headers, String separator){
-        log.debug("Processing Non json headers: {}, separator: {} ", headers, separator);
+        log.debug("Processing Non json headers with separator: {} ", separator);
         for (String headerKeyValue : headers.split(separator)) {
             if (headerKeyValue.contains(":")) {
                 String key = headerKeyValue.split(":")[0];
