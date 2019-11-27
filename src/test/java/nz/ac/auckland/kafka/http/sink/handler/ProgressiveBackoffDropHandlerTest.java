@@ -32,7 +32,7 @@ class ProgressiveBackoffDropHandlerTest {
         props.put(HttpSinkConnectorConfig.HEADERS,"");
         props.put(HttpSinkConnectorConfig.HEADER_SEPERATOR,"|");
         props.put(HttpSinkConnectorConfig.EXCEPTION_STRATEGY,"PROGRESS_BACK_OFF_DROP_MESSAGE");
-        props.put(HttpSinkConnectorConfig.RETRY_BACKOFF_SEC,"5,10");
+        props.put(HttpSinkConnectorConfig.RESPONSE_RETRY_BACKOFF_SEC,"5,10");
         config = new HttpSinkConnectorConfig(props);
     }
 

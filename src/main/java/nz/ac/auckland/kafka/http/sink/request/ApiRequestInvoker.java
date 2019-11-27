@@ -2,7 +2,8 @@ package nz.ac.auckland.kafka.http.sink.request;
 
 import nz.ac.auckland.kafka.http.sink.HttpSinkConnectorConfig;
 import nz.ac.auckland.kafka.http.sink.handler.ExceptionHandler;
-import nz.ac.auckland.kafka.http.sink.handler.ExceptionStrategyHandlerFactory;
+import nz.ac.auckland.kafka.http.sink.handler.RequestExceptionStrategyHandlerFactory;
+import nz.ac.auckland.kafka.http.sink.handler.ResponseExceptionStrategyHandlerFactory;
 import nz.ac.auckland.kafka.http.sink.model.KafkaRecord;
 import nz.ac.auckland.kafka.http.sink.util.TraceIdGenerator;
 import org.apache.kafka.connect.sink.SinkRecord;
@@ -12,8 +13,6 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 import java.util.Collection;
-
-import static nz.ac.auckland.kafka.http.sink.handler.ExceptionStrategyHandlerFactory.ExceptionStrategy.PROGRESS_BACK_OFF_STOP_TASK;
 
 public class ApiRequestInvoker {
 
@@ -81,9 +80,10 @@ public class ApiRequestInvoker {
     }
 
     private void setExceptionStrategy() {
-        requestExceptionHandler = ExceptionStrategyHandlerFactory
-                .getInstance(PROGRESS_BACK_OFF_STOP_TASK, config, sinkContext);
-        responseExceptionHandler = ExceptionStrategyHandlerFactory
+        requestExceptionHandler = RequestExceptionStrategyHandlerFactory
+                .getInstance(RequestExceptionStrategyHandlerFactory.ExceptionStrategy.PROGRESS_BACK_OFF_STOP_TASK,
+                        config, sinkContext);
+        responseExceptionHandler = ResponseExceptionStrategyHandlerFactory
                 .getInstance(config.exceptionStrategy, config, sinkContext);
 
     }

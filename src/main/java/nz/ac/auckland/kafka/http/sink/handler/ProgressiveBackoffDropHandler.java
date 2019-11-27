@@ -19,9 +19,9 @@ public class ProgressiveBackoffDropHandler implements ExceptionHandler {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     ProgressiveBackoffDropHandler(HttpSinkConnectorConfig config, SinkTaskContext context) {
-        log.info("Exception strategy: Progressive back-off drop Strategy retries={}.", Arrays.toString(config.retryBackoffsec));
-        this.maxRetries = config.retryBackoffsec.length;
-        this.retryBackoffsec = config.retryBackoffsec;
+        log.info("Exception strategy: Progressive back-off drop Strategy retries={}.", Arrays.toString(config.responseRetryBackoffsec));
+        this.maxRetries = config.responseRetryBackoffsec.length;
+        this.retryBackoffsec = config.responseRetryBackoffsec;
         this.sinkContext = context;
     }
 

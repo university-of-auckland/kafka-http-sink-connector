@@ -1,6 +1,6 @@
 package nz.ac.auckland.kafka.http.sink;
 
-import nz.ac.auckland.kafka.http.sink.handler.ExceptionStrategyHandlerFactory;
+import nz.ac.auckland.kafka.http.sink.handler.ResponseExceptionStrategyHandlerFactory;
 import nz.ac.auckland.kafka.http.sink.validator.EnumValidator;
 import nz.ac.auckland.kafka.http.sink.validator.JsonValidator;
 import org.apache.kafka.common.config.AbstractConfig;
@@ -48,16 +48,22 @@ public class HttpSinkConnectorConfig extends AbstractConfig {
   private static final String READ_TIMEOUT_DEFAULT = "60000";
 
   public static final String EXCEPTION_STRATEGY = "exception.strategy";
-  private static final String EXCEPTION_STRATEGY_DEFAULT = ExceptionStrategyHandlerFactory.ExceptionStrategy.PROGRESS_BACK_OFF_DROP_MESSAGE.toString();
+  private static final String EXCEPTION_STRATEGY_DEFAULT = ResponseExceptionStrategyHandlerFactory.ExceptionStrategy.PROGRESS_BACK_OFF_DROP_MESSAGE.toString();
   private static final String EXCEPTION_STRATEGY_DOC =
           "Exception strategy to handel retry response from API call.";
   private static final String EXCEPTION_STRATEGY_DISPLAY = "Exception strategy";
 
-  public static final String RETRY_BACKOFF_SEC = "retry.backoff.sec";
-  private static final String RETRY_BACKOFF_SEC_DEFAULT = "5,30,60,300,600";
-  private static final String RETRY_BACKOFF_SEC_DOC =
-      "The time in seconds to wait following an error before a retry attempt is made.";
-  private static final String RETRY_BACKOFF_SEC_DISPLAY = "Retry Backoff (secs)";
+  public static final String RESPONSE_RETRY_BACKOFF_SEC = "retry.backoff.sec";
+  private static final String RESPONSE_RETRY_BACKOFF_SEC_DEFAULT = "5,30,60,300,600";
+  private static final String RESPONSE_RETRY_BACKOFF_SEC_DOC =
+      "The time in seconds to wait following an error before a retry attempt is made for a errored response.";
+  private static final String RESPONSE_RETRY_BACKOFF_SEC_DISPLAY = "Retry Backoff (secs)";
+
+  public static final String REQUEST_RETRY_BACKOFF_SEC = "request.retry.backoff.sec";
+  private static final String REQUEST_RETRY_BACKOFF_SEC_DEFAULT = "5,10,15";
+  private static final String REQUEST_RETRY_BACKOFF_SEC_DOC =
+          "The time in seconds to wait following an error before a retry attempt is made for a errored request.";
+  private static final String REQUEST_RETRY_BACKOFF_SEC_DISPLAY = "Request Retry Backoff (secs)";
 
   private static final String API_REQUEST = "Request";
   private static final String RETRIES_GROUP = "Retries";
@@ -70,8 +76,9 @@ public class HttpSinkConnectorConfig extends AbstractConfig {
   public final int readTimeout;
   public final String headers;
   public final String headerSeparator;
-  public final String[] retryBackoffsec;
-  public final ExceptionStrategyHandlerFactory.ExceptionStrategy exceptionStrategy;
+  public final String[] responseRetryBackoffsec;
+  public final String[] requestRetryBackoffsec;
+  public final ResponseExceptionStrategyHandlerFactory.ExceptionStrategy exceptionStrategy;
 
   public HttpSinkConnectorConfig(ConfigDef config, Map<String, String> parsedConfig) {
     super(config, parsedConfig, false);
@@ -81,8 +88,9 @@ public class HttpSinkConnectorConfig extends AbstractConfig {
     readTimeout = getInt(READ_TIMEOUT);
     headers = getString(HEADERS);
     headerSeparator = getString(HEADER_SEPERATOR);
-    retryBackoffsec = getString(RETRY_BACKOFF_SEC).split(RETRY_BACKOFF_SEC_SEPARATOR);
-    exceptionStrategy = ExceptionStrategyHandlerFactory.ExceptionStrategy.valueOf(getString(EXCEPTION_STRATEGY).toUpperCase());
+    responseRetryBackoffsec = getString(RESPONSE_RETRY_BACKOFF_SEC).split(RETRY_BACKOFF_SEC_SEPARATOR);
+    requestRetryBackoffsec = getString(REQUEST_RETRY_BACKOFF_SEC).split(RETRY_BACKOFF_SEC_SEPARATOR);
+    exceptionStrategy = ResponseExceptionStrategyHandlerFactory.ExceptionStrategy.valueOf(getString(EXCEPTION_STRATEGY).toUpperCase());
   }
 
   public HttpSinkConnectorConfig(Map<String, String> parsedConfig) {
@@ -153,21 +161,31 @@ public class HttpSinkConnectorConfig extends AbstractConfig {
                 ConfigDef.Width.SHORT,
                 HEADER_SEPERATOR_DISPLAY
             ).define(
-                RETRY_BACKOFF_SEC,
+                RESPONSE_RETRY_BACKOFF_SEC,
                 ConfigDef.Type.STRING,
-                RETRY_BACKOFF_SEC_DEFAULT,
+                RESPONSE_RETRY_BACKOFF_SEC_DEFAULT,
                 ConfigDef.Importance.MEDIUM,
-                RETRY_BACKOFF_SEC_DOC,
+                RESPONSE_RETRY_BACKOFF_SEC_DOC,
                 RETRIES_GROUP,
                 1,
                 ConfigDef.Width.SHORT,
-                RETRY_BACKOFF_SEC_DISPLAY
+                RESPONSE_RETRY_BACKOFF_SEC_DISPLAY
+            ).define(
+                REQUEST_RETRY_BACKOFF_SEC,
+                ConfigDef.Type.STRING,
+                REQUEST_RETRY_BACKOFF_SEC_DEFAULT,
+                ConfigDef.Importance.MEDIUM,
+                REQUEST_RETRY_BACKOFF_SEC_DOC,
+                RETRIES_GROUP,
+                1,
+                ConfigDef.Width.SHORT,
+                REQUEST_RETRY_BACKOFF_SEC_DISPLAY
             )
             .define(
                 EXCEPTION_STRATEGY,
                 ConfigDef.Type.STRING,
                 EXCEPTION_STRATEGY_DEFAULT,
-                EnumValidator.in(ExceptionStrategyHandlerFactory.ExceptionStrategy.values()),
+                EnumValidator.in(ResponseExceptionStrategyHandlerFactory.ExceptionStrategy.values()),
                 ConfigDef.Importance.MEDIUM,
                 EXCEPTION_STRATEGY_DOC,
                 RETRIES_GROUP,

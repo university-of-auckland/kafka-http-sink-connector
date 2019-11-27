@@ -47,6 +47,8 @@ public class HttpSinkTask extends SinkTask {
     MDC.clear();
   }
 
+
+
   public void stop() {
     MDC.put("X-B3-TraceId","-");
     MDC.put("X-B3-SpanId","-");

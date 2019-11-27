@@ -33,14 +33,14 @@ class ProgressiveBackoffStopTaskHandlerTest {
         props.put(HttpSinkConnectorConfig.HEADERS,"");
         props.put(HttpSinkConnectorConfig.HEADER_SEPERATOR,"|");
         props.put(HttpSinkConnectorConfig.EXCEPTION_STRATEGY,"PROGRESS_BACK_OFF_DROP_MESSAGE");
-        props.put(HttpSinkConnectorConfig.RETRY_BACKOFF_SEC,"5,10");
+        props.put(HttpSinkConnectorConfig.REQUEST_RETRY_BACKOFF_SEC,"5,10");
         config = new HttpSinkConnectorConfig(props);
     }
 
     @Test
     void Test_task_stopped_after_set_retries_no_commit(){
 
-        ProgressiveBackoffStopTaskHandler handler = new ProgressiveBackoffStopTaskHandler(config,sinkTaskContext);
+        ProgressiveBackoffStopTaskHandler handler = new ProgressiveBackoffStopTaskHandler(config,sinkTaskContext, config.responseRetryBackoffsec);
 
         //First Try 5 sec
         Assertions.assertThrows(RetriableException.class, () -> invokeHandel(handler));
@@ -55,7 +55,7 @@ class ProgressiveBackoffStopTaskHandlerTest {
     @Test
     void Test_second_message_dropped_after_set_retries_and_first_was_success_in_between(){
 
-        ProgressiveBackoffStopTaskHandler handler = new ProgressiveBackoffStopTaskHandler(config,sinkTaskContext);
+        ProgressiveBackoffStopTaskHandler handler = new ProgressiveBackoffStopTaskHandler(config,sinkTaskContext,config.responseRetryBackoffsec);
 
         //First Try 5 sec
         Assertions.assertThrows(RetriableException.class, () -> invokeHandel(handler));
