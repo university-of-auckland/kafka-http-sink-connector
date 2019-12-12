@@ -1,5 +1,6 @@
 package nz.ac.auckland.kafka.http.sink;
 
+import nz.ac.auckland.kafka.http.sink.request.ApiRequest;
 import nz.ac.auckland.kafka.http.sink.request.ApiRequestInvoker;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
@@ -21,9 +22,9 @@ public class HttpSinkTask extends SinkTask {
   @Override
   public void start(final Map<String, String> props) {
     String connectorName = context.configs().get("name");
-    MDC.put("X-B3-TraceId","-");
-    MDC.put("X-B3-SpanId","-");
-    MDC.put("X-B3-Info", "connection=" + connectorName);
+    MDC.put(ApiRequest.REQUEST_HEADER_TRACE_ID_KEY,"-");
+    MDC.put(ApiRequest.REQUEST_HEADER_SPAN_ID_KEY,"-");
+    MDC.put(ApiRequest.REQUEST_HEADER_INFO_KEY, "connection=" + connectorName);
     log.info("Starting task for {} ", connectorName);
     config = new HttpSinkConnectorConfig(props);
     apiRequestInvoker = new ApiRequestInvoker(config, context);
@@ -50,9 +51,9 @@ public class HttpSinkTask extends SinkTask {
 
 
   public void stop() {
-    MDC.put("X-B3-TraceId","-");
-    MDC.put("X-B3-SpanId","-");
-    MDC.put("X-B3-Info", "connection=" + context.configs().get("name"));
+    MDC.put(ApiRequest.REQUEST_HEADER_TRACE_ID_KEY,"-");
+    MDC.put(ApiRequest.REQUEST_HEADER_SPAN_ID_KEY,"-");
+    MDC.put(ApiRequest.REQUEST_HEADER_INFO_KEY, "connection=" + context.configs().get("name"));
     log.info("Stopping task for {}", context.configs().get("name"));
     MDC.clear();
   }

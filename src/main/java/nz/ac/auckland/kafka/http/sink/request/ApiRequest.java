@@ -15,13 +15,13 @@ import java.util.List;
 
 public class ApiRequest implements Request{
 
-    static final String REQUEST_HEADER_TRACE_ID_KEY = "X-B3-TraceId";
-    static final String REQUEST_HEADER_SPAN_ID_KEY = "X-B3-SpanId";
+    public static final String REQUEST_HEADER_TRACE_ID_KEY = "X-B3-TraceId";
+    public static final String REQUEST_HEADER_SPAN_ID_KEY = "X-B3-SpanId";
     static final String REQUEST_HEADER_SAMPLED_KEY = "X-B3-Sampled";
     static final String REQUEST_HEADER_SAMPLED_VALUE = "Defer";
 
     static final String REQUEST_HEADER_KAFKA_TOPIC_KEY = "X-Kafka-Topic";
-    static final String REQUEST_HEADER_INFO_KEY = "X-B3-Info" ;
+    public static final String REQUEST_HEADER_INFO_KEY = "X-B3-Info" ;
     private final static String STREAM_ENCODING = "UTF-8";
     private HttpURLConnection connection;
     private final Logger log = LoggerFactory.getLogger(this.getClass());

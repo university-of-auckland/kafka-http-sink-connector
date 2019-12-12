@@ -6,6 +6,7 @@ import nz.ac.auckland.kafka.http.sink.handler.RequestExceptionStrategyHandlerFac
 import nz.ac.auckland.kafka.http.sink.handler.ResponseExceptionStrategyHandlerFactory;
 import nz.ac.auckland.kafka.http.sink.model.KafkaRecord;
 import nz.ac.auckland.kafka.http.sink.util.TraceIdGenerator;
+import org.apache.kafka.connect.header.Header;
 import org.apache.kafka.connect.sink.SinkRecord;
 import org.apache.kafka.connect.sink.SinkTaskContext;
 import org.slf4j.Logger;
@@ -13,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 import java.util.Collection;
+import java.util.Optional;
 
 public class ApiRequestInvoker {
 
@@ -42,14 +44,34 @@ public class ApiRequestInvoker {
     public void invoke(final Collection<SinkRecord> records){
         for(SinkRecord record: records){
             String spanHash = this.sinkContext.configs().get("name") + record.topic() + record.kafkaPartition() + record.kafkaOffset();
-            String traceId = TraceIdGenerator.generateTraceId(spanHash);
-            MDC.put("X-B3-TraceId",traceId);
-            MDC.put("X-B3-SpanId",traceId);
-            MDC.put("X-B3-Info", buildLogInfo(record));
+
+            String traceId = this.getHeader(record, ApiRequest.REQUEST_HEADER_TRACE_ID_KEY)
+                                 .orElseGet(() -> TraceIdGenerator.generateTraceId(spanHash));
+
+            MDC.put(ApiRequest.REQUEST_HEADER_TRACE_ID_KEY, traceId);
+            MDC.put(ApiRequest.REQUEST_HEADER_SPAN_ID_KEY, traceId);
+            MDC.put(ApiRequest.REQUEST_HEADER_INFO_KEY, buildLogInfo(record));
+
             log.info("Processing record: topic={}  partition={} offset={} value={}", record.topic(), record.kafkaPartition(), record.kafkaOffset(), record.value().toString());
             sendAPiRequest(record , traceId);
+
             MDC.clear();
         }
+    }
+
+    private Optional<String> getHeader(SinkRecord record, String headerName) {
+
+        Header header = record.headers().lastWithName(headerName);
+        if(header != null) {
+
+            Object value = header.value();
+            if(value != null) {
+                log.debug("Found header '{}' value '{}'", headerName, value);
+                return Optional.of(String.valueOf(value));
+            }
+        }
+
+        return Optional.empty();
     }
 
     private String buildLogInfo(SinkRecord record) {
