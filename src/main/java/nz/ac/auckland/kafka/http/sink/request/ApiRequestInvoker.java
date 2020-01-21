@@ -43,17 +43,26 @@ public class ApiRequestInvoker {
 
     public void invoke(final Collection<SinkRecord> records){
         for(SinkRecord record: records){
+
+            long start = System.currentTimeMillis();
+
             String spanHash = this.sinkContext.configs().get("name") + record.topic() + record.kafkaPartition() + record.kafkaOffset();
 
             String traceId = this.getHeader(record, ApiRequest.REQUEST_HEADER_TRACE_ID_KEY)
                                  .orElseGet(() -> TraceIdGenerator.generateTraceId(spanHash));
 
+            String kafkaDetails = buildLogInfo(record);
+
             MDC.put(ApiRequest.REQUEST_HEADER_TRACE_ID_KEY, traceId);
             MDC.put(ApiRequest.REQUEST_HEADER_SPAN_ID_KEY, traceId);
-            MDC.put(ApiRequest.REQUEST_HEADER_INFO_KEY, buildLogInfo(record));
+            MDC.put(ApiRequest.REQUEST_HEADER_INFO_KEY, kafkaDetails);
 
             log.info("Processing record: topic={}  partition={} offset={} value={}", record.topic(), record.kafkaPartition(), record.kafkaOffset(), record.value().toString());
             sendAPiRequest(record , traceId);
+
+            long executionTime = System.currentTimeMillis() - start;
+            log.debug("Metrics=Latency metricSystem=kafka-connector-{} metricMeasure=single-record-processing-time metricValue={} kafkaDetails={}",
+                    sinkContext.configs().get("name"), executionTime, kafkaDetails);
 
             MDC.clear();
         }

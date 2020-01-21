@@ -16,23 +16,29 @@ import java.util.Map;
 public class HttpSinkTask extends SinkTask {
   private static final Logger log = LoggerFactory.getLogger(HttpSinkTask.class);
 
-  private HttpSinkConnectorConfig config;
   private ApiRequestInvoker apiRequestInvoker;
+  private String connectorName;
 
   @Override
   public void start(final Map<String, String> props) {
-    String connectorName = context.configs().get("name");
+
+    connectorName = context.configs().get("name");
     MDC.put(ApiRequest.REQUEST_HEADER_TRACE_ID_KEY,"-");
     MDC.put(ApiRequest.REQUEST_HEADER_SPAN_ID_KEY,"-");
     MDC.put(ApiRequest.REQUEST_HEADER_INFO_KEY, "connection=" + connectorName);
+
     log.info("Starting task for {} ", connectorName);
-    config = new HttpSinkConnectorConfig(props);
+
+    HttpSinkConnectorConfig config = new HttpSinkConnectorConfig(props);
     apiRequestInvoker = new ApiRequestInvoker(config, context);
   }
 
   @Override
   public void put(Collection<SinkRecord> records) {
-    log.debug("Totals records:{}", records.size());
+    long start = System.currentTimeMillis();
+
+    int batchSize = records.size();
+    log.debug("Totals records:{}", batchSize);
     if (records.isEmpty()) {
       return;
     }
@@ -41,6 +47,9 @@ public class HttpSinkTask extends SinkTask {
     //Request a commit of the processed message
     //else the commit is triggered after the  'offset.flush.interval.ms'
     context.requestCommit();
+
+    long executionTime = System.currentTimeMillis() - start;
+    log.info("Metrics=Latency metricSystem=kafka-connector-{} metricMeasure=batch-processing-time metricValue={} batchSize={}", connectorName, executionTime, batchSize);
   }
 
   @Override
