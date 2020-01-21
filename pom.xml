@@ -3,7 +3,7 @@
 
     <groupId>nz.ac.auckland</groupId>
     <artifactId>uoa-kafka-http-sink-connector</artifactId>
-    <version>1.0.16-SNAPSHOT</version>
+    <version>1.0.17-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>uoa-kafka-http-sink-connector</name>
