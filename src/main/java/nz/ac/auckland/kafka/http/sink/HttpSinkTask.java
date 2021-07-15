@@ -50,6 +50,7 @@ public class HttpSinkTask extends SinkTask {
 
     long executionTime = System.currentTimeMillis() - start;
     log.info("Metrics=Latency metricSystem=kafka-connector-{} metricMeasure=batch-processing-time metricValue={} batchSize={}", connectorName, executionTime, batchSize);
+
   }
 
   @Override

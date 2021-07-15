@@ -4,40 +4,38 @@ import org.apache.kafka.connect.sink.SinkRecord;
 
 public class KafkaRecord {
 
-    private String topic;
-    private String key;
-    private long offset;
-    private long partition;
-    private String value;
+    private final SinkRecord record;
+
 
     public KafkaRecord(SinkRecord record) {
-        this.topic = record.topic();
-        this.key = record.key()== null ? "" : record.key().toString();
-        this.offset = record.kafkaOffset();
-        this.partition = record.kafkaPartition();
-        this.value = record.value().toString();
+
+        this.record = record;
     }
 
     public String getTopic() {
-        return topic;
+        return record.topic();
     }
 
     public long getPartition() {
-        return partition;
+        return record.kafkaPartition();
     }
 
     public long getOffset() {
-        return offset;
+        return record.kafkaOffset();
     }
 
     @Override
     public String toString() {
         return "KafkaRecord{" +
-                "topic='" + topic + '\'' +
-                ", key='" + key + '\'' +
-                ", partition=" + partition +
-                ", offset=" + offset +
-                ", value='" + value + '\'' +
+                "topic='" + record.topic() + '\'' +
+                ", key='" + record.key() + '\'' +
+                ", partition=" + record.kafkaPartition() +
+                ", offset=" + record.kafkaOffset() +
+                ", value='" + record.value() + '\'' +
                 '}';
+    }
+
+    public SinkRecord getRecord() {
+        return record;
     }
 }
