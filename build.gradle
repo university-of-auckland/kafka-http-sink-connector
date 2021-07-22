@@ -25,7 +25,7 @@ dependencies {
 
 group = 'nz.ac.auckland'
 version = '1.0.1'
-description = 'uoa-kafka-http-sink-connector'
+description = 'uoa-kafka-connect-http-sink'
 java.sourceCompatibility = JavaVersion.VERSION_11
 
 publishing {
