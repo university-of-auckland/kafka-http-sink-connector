@@ -34,7 +34,7 @@ publishing {
             groupId 'soliver-kafka'
             artifactId 'kafka-connect-http-sink'
             version "$version"
-            artifact "build/libs/kafka-connect-http-sink-$version-all.jar"
+            artifact "build/libs/uoa-kafka-connect-http-sink-$version-all.jar"
         }
     }
 
