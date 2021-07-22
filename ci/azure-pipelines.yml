@@ -1,0 +1,31 @@
+
+trigger:
+  batch: true
+  branches:
+    include:
+      - '*'
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+  - task: Gradle@2
+    name: build_shadowjar
+    inputs:
+      workingDirectory: ''
+      gradleWrapperFile: 'gradlew'
+      gradleOptions: '-Xmx3072m'
+      javaHomeOption: 'JDKVersion'
+      jdkVersionOption: '1.11'
+      jdkArchitectureOption: 'x64'
+      publishJUnitResults: false
+      testResultsFiles: '**/TEST-*.xml'
+      tasks: 'build shadowjar'
+  - task: Gradle@2
+    name: publish_artifact
+    inputs:
+      gradleWrapperFile: 'gradlew'
+      tasks: 'publish'
+      publishJUnitResults: false
+      javaHomeOption: 'JDKVersion'
+      sonarQubeRunAnalysis: false
+      spotBugsAnalysis: false
