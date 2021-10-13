@@ -130,7 +130,7 @@ public class ApiRequest implements Request{
             JsonObject response = new JsonParser().parse(getResponse()).getAsJsonObject();
             return response.get("retry").getAsBoolean()? RetryIndicator.RETRY : RetryIndicator.NO_RETRY ;
         }catch (Exception ex){
-            log.warn("Json response with 'retry' field with not found. Assuming retry=true.");
+            log.warn("Json response with 'retry' field with not found. Assuming retry=false.");
             return RetryIndicator.UNKNOWN;
         }
     }
