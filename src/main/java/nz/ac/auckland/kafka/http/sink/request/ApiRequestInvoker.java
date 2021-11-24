@@ -6,6 +6,8 @@ import nz.ac.auckland.kafka.http.sink.handler.RequestExceptionStrategyHandlerFac
 import nz.ac.auckland.kafka.http.sink.handler.ResponseExceptionStrategyHandlerFactory;
 import nz.ac.auckland.kafka.http.sink.model.KafkaRecord;
 import nz.ac.auckland.kafka.http.sink.util.TraceIdGenerator;
+
+import org.apache.kafka.common.record.TimestampType;
 import org.apache.kafka.connect.header.Header;
 import org.apache.kafka.connect.sink.SinkRecord;
 import org.apache.kafka.connect.sink.SinkTaskContext;
@@ -14,7 +16,10 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.Optional;
+
+import java.lang.InterruptedException;
 
 public class ApiRequestInvoker {
 
@@ -58,7 +63,14 @@ public class ApiRequestInvoker {
             MDC.put(ApiRequest.REQUEST_HEADER_INFO_KEY, kafkaDetails);
 
             log.info("Processing record: topic={}  partition={} offset={} value={}", record.topic(), record.kafkaPartition(), record.kafkaOffset(), record.value().toString());
-            sendAPiRequest(record , traceId);
+            
+            Long messageDelay = this.getMessageDelay(record, start);
+
+            if (messageDelay == 0L){
+                sendAPiRequest(record , traceId);
+            }else {
+                sendDelayedAPiRequest(record, traceId, messageDelay);
+            }
 
             long executionTime = System.currentTimeMillis() - start;
             log.debug("Metrics=Latency metricSystem=kafka-connector-{} metricMeasure=single-record-processing-time metricValue={} kafkaDetails={}",
@@ -116,6 +128,33 @@ public class ApiRequestInvoker {
                         config, sinkContext);
         responseExceptionHandler = ResponseExceptionStrategyHandlerFactory
                 .getInstance(config.exceptionStrategy, config, sinkContext);
-
     }
+
+    private Long getMessageDelay(SinkRecord record, long start) {
+        long delay = this.config.requestDelay * 1000L;
+      
+        if (record.timestampType().equals(TimestampType.NO_TIMESTAMP_TYPE)){
+          log.info("Checking delay: now={}, sleep={}", start, new Date(start).toString(), new Date(delay).toString());
+          // If there is no timestamp we sleep for the specified delay
+          return delay;
+        }
+      
+        Long timePassed = start - record.timestamp();
+        Long delayTimePassed = delay - timePassed;
+      
+        log.info("Checking delay: now={}, record-timestamp={}, timepassed={}, sleep={}", new Date(start).toString(), new Date(record.timestamp()).toString(), timePassed, delayTimePassed);
+        
+        return timePassed < delay ? delayTimePassed : 0L;
+    }
+
+    private void sendDelayedAPiRequest(SinkRecord record, String spanId, long delay){
+        try {
+            Thread.sleep(delay);
+            this.sendAPiRequest(record, spanId);
+        } catch (InterruptedException e){
+            log.error("The delay for the record was interupted. The record has not been forwarded");
+            e.printStackTrace();
+        }
+    }
+
 }

@@ -2,6 +2,8 @@ package nz.ac.auckland.kafka.http.sink.request;
 
 import nz.ac.auckland.kafka.http.sink.HttpSinkConnectorConfig;
 import nz.ac.auckland.kafka.http.sink.model.KafkaRecord;
+
+import org.apache.kafka.common.record.TimestampType;
 import org.apache.kafka.connect.errors.ConnectException;
 import org.apache.kafka.connect.errors.RetriableException;
 import org.apache.kafka.connect.sink.SinkRecord;
@@ -37,7 +39,7 @@ class ApiRequestInvokerTest {
     void initMocks() {
         MockitoAnnotations.initMocks(this);
         records = Collections.singleton(new SinkRecord("nz-ac-auckland-person", 0,
-                null, null, null, "{\"subject\":\"testUser\"}",0));
+                null, null, null, "{\"subject\":\"testUser\"}",0, 4L, TimestampType.CREATE_TIME));
 
         Map<String,String> props= new HashMap<>();
         props.put(HttpSinkConnectorConfig.HTTP_API_URL,"http://mockbin.com");
@@ -68,6 +70,27 @@ class ApiRequestInvokerTest {
 
     @Test
     void Test_ApiRequestErrorException_throws_ConnectException(){
+
+        when(apiRequestBuilder.createRequest(any(), any(KafkaRecord.class))).thenReturn(apiRequest);
+        when(apiRequest.setHeaders(anyString(), anyString(), anyString())).thenReturn(apiRequest);
+
+        doThrow(ApiRequestErrorException.class).when(apiRequest).sendPayload(anyString());
+
+        ApiRequestInvoker invoker = new ApiRequestInvoker(config,sinkTaskContext, apiRequestBuilder);
+        Assertions.assertThrows(ConnectException.class, () ->
+                invoker.invoke(records));
+
+
+        verify(apiRequestBuilder, times(1))
+                .createRequest(any(),any(KafkaRecord.class));
+
+    }
+
+    @Test
+    void Test_ApiRequestErrorException_throws_ConnectException_No_Timestamp(){
+
+        records = Collections.singleton(new SinkRecord("nz-ac-auckland-person", 0,
+                null, null, null, "{\"subject\":\"testUser\"}",0));
 
         when(apiRequestBuilder.createRequest(any(), any(KafkaRecord.class))).thenReturn(apiRequest);
         when(apiRequest.setHeaders(anyString(), anyString(), anyString())).thenReturn(apiRequest);

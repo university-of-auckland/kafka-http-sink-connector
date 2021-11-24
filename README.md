@@ -19,6 +19,7 @@ callback.request.methods| Method of the callback url| POST, PUT,DELETE | | Y|
 callback.request.headers| Headers to be passed to the callback|JSON String ( Sample: `"{\"Content-Type\":\"application/json\",\"apikey\":\"API_KEY_HERE\"}"` )| |N
 exception.strategy| Strategy to be used in-case the callback request returns response with `retry` flag `true`.| PROGRESS_BACK_OFF_DROP_MESSAGE, PROGRESS_BACK_OFF_STOP_TASK, DROP_MESSAGE, STOP_TASK | PROGRESS_BACK_OFF_DROP_MESSAGE | Y
 retry.backoff.sec| The time in seconds to wait following an error before a retry attempt is made.| Integer | 5,30,60,300,600 | Y
+request.delay.sec| The time in seconds to wait before calling the http endpoint. Based on the record timestamp. If record has no timestamp the full delay is used from when the connector reads the record| Integer | 0 | N
 
 ### Exception strategies
 
