@@ -1,0 +1,58 @@
+name: Test, create and publish a Docker image
+
+on: [push]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-push-image:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      
+      - name: Build jar 
+        run: mvn compile && mvn package
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: install xmllint
+        run: sudo apt  install libxml2-utils
+
+      - name: Extract branch postfix if not main branch
+        if: (github.ref != 'refs/heads/main') && (github.ref != 'refs/heads/master') 
+        run: |
+          echo "IMAGE_DEV_POSTFIX=-dev" >> $GITHUB_ENV
+      
+      - name: Extract version from pom file
+        id: project_version
+        run: |
+          version=$(sed -e 's/xmlns="[^\"]*"//g' pom.xml | xmllint --xpath "project/version/text()" - | tr '[:upper:]' '[:lower:]' )
+          echo "PROJECT_VERSION=$version" >> $GITHUB_ENV
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,enable=true,value=${{ env.PROJECT_VERSION }}${{ env.IMAGE_DEV_POSTFIX }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}

@@ -65,6 +65,12 @@ public class HttpSinkConnectorConfig extends AbstractConfig {
           "The time in seconds to wait following an error before a retry attempt is made for a errored request.";
   private static final String REQUEST_RETRY_BACKOFF_SEC_DISPLAY = "Request Retry Backoff (secs)";
 
+  public static final String DELAY_REQUEST_SEC = "request.delay.sec";
+  private static final String DELAY_REQUEST_SEC_DEFAULT = "0";
+  private static final String DELAY_REQUEST_SEC_DOC =
+      "The time in seconds to wait before issuing a request based on the kafka event timestamp";
+  private static final String DELAY_REQUEST_SEC_DISPLAY = "Request delay (secs)";
+
   private static final String API_REQUEST = "Request";
   private static final String RETRIES_GROUP = "Retries";
 
@@ -79,6 +85,7 @@ public class HttpSinkConnectorConfig extends AbstractConfig {
   public final String[] responseRetryBackoffsec;
   public final String[] requestRetryBackoffsec;
   public final ResponseExceptionStrategyHandlerFactory.ExceptionStrategy exceptionStrategy;
+  public final int requestDelay;
 
   public HttpSinkConnectorConfig(ConfigDef config, Map<String, String> parsedConfig) {
     super(config, parsedConfig, false);
@@ -88,6 +95,7 @@ public class HttpSinkConnectorConfig extends AbstractConfig {
     readTimeout = getInt(READ_TIMEOUT);
     headers = getString(HEADERS);
     headerSeparator = getString(HEADER_SEPERATOR);
+    requestDelay = getInt(DELAY_REQUEST_SEC);
     responseRetryBackoffsec = getString(RESPONSE_RETRY_BACKOFF_SEC).split(RETRY_BACKOFF_SEC_SEPARATOR);
     requestRetryBackoffsec = getString(REQUEST_RETRY_BACKOFF_SEC).split(RETRY_BACKOFF_SEC_SEPARATOR);
     exceptionStrategy = ResponseExceptionStrategyHandlerFactory.ExceptionStrategy.valueOf(getString(EXCEPTION_STRATEGY).toUpperCase());
@@ -192,6 +200,16 @@ public class HttpSinkConnectorConfig extends AbstractConfig {
                 2,
                 ConfigDef.Width.SHORT,
                 EXCEPTION_STRATEGY_DISPLAY
+            ).define(
+                DELAY_REQUEST_SEC,
+                ConfigDef.Type.INT,
+                DELAY_REQUEST_SEC_DEFAULT,
+                ConfigDef.Importance.MEDIUM,
+                DELAY_REQUEST_SEC_DOC,
+                RETRIES_GROUP,
+                2,
+                ConfigDef.Width.SHORT,
+                DELAY_REQUEST_SEC_DISPLAY
             );
   }
 }
