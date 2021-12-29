@@ -94,7 +94,7 @@ public class ApiRequest implements Request{
             writer.write(payload);
             writer.flush();
             writer.close();
-            log.info("Submitted request: url={} payload={}",connection.getURL(), payload);
+            log.info("Submitted request: url={} payload={}", connection.getURL(), payload);
             processResponse();
         }catch (ApiResponseErrorException e) {
             throw e;
@@ -129,9 +129,11 @@ public class ApiRequest implements Request{
         try {
             JsonObject response = new JsonParser().parse(getResponse()).getAsJsonObject();
             return response.get("retry").getAsBoolean()? RetryIndicator.RETRY : RetryIndicator.NO_RETRY ;
-        }catch (Exception ex){
-            log.warn("Json response with 'retry' field with not found. Assuming retry=false.");
-            return RetryIndicator.NO_RETRY;
+        }catch (JsonSyntaxException | IllegalStateException exception){
+            throw  exception;
+        }
+        catch (Exception ex){
+            return RetryIndicator.UNKNOWN;
         }
     }
 

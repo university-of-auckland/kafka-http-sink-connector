@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static nz.ac.auckland.kafka.http.sink.HttpSinkConnectorConfig.HEADER_SEPERATOR_DEFAULT;
@@ -116,11 +117,11 @@ class ApiRequestTest {
         String response = "{ \"message\":\"Unable to process. An unhandled exception has been thrown.\"," +
                 "   \"retry\":false";
         when(connection.getOutputStream()).thenReturn(outputStreamMock);
-        when(connection.getInputStream()).thenReturn(new ByteArrayInputStream(response.getBytes(Charset.forName("UTF-8"))));
+        when(connection.getInputStream()).thenReturn(new ByteArrayInputStream(response.getBytes(StandardCharsets.UTF_8)));
+        when(connection.getResponseCode()).thenReturn(502);
+        ApiRequest apiRequest = new ApiRequest(connection, kafkaRecord);
 
-        ApiRequest apiRequest = new ApiRequest(connection,kafkaRecord);
-
-        Assertions.assertThrows(ApiResponseErrorException.class, () ->
+        Assertions.assertThrows(ApiRequestErrorException.class, () ->
                 apiRequest.sendPayload("test"));
 
     }
@@ -131,11 +132,11 @@ class ApiRequestTest {
 
         String response = "error";
         when(connection.getOutputStream()).thenReturn(outputStreamMock);
-        when(connection.getInputStream()).thenReturn(new ByteArrayInputStream(response.getBytes(Charset.forName("UTF-8"))));
+        when(connection.getInputStream()).thenReturn(new ByteArrayInputStream(response.getBytes(StandardCharsets.UTF_8)));
 
-        ApiRequest apiRequest = new ApiRequest(connection,kafkaRecord);
+        ApiRequest apiRequest = new ApiRequest(connection, kafkaRecord);
 
-        Assertions.assertThrows(ApiResponseErrorException.class, () ->
+        Assertions.assertThrows(ApiRequestErrorException.class, () ->
                 apiRequest.sendPayload("test"));
 
     }
