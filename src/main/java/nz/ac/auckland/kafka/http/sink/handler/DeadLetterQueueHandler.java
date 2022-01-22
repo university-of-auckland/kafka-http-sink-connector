@@ -12,7 +12,7 @@ public class DeadLetterQueueHandler implements ExceptionHandler {
     }
 
     @Override
-    public void handel(CallBackApiException e) {
+    public void handle(CallBackApiException e) {
         this.errantRecordReporter.report(e.getRecord().getRecord(), e);
     }
 }

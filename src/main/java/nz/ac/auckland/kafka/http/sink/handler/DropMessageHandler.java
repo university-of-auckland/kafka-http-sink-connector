@@ -15,7 +15,7 @@ public class DropMessageHandler implements ExceptionHandler {
     }
 
     @Override
-    public void handel(CallBackApiException e) {
+    public void handle(CallBackApiException e) {
         log.error("Drop message Strategy: Dropping message {}" , e.getRecord());
         sinkContext.requestCommit();
     }

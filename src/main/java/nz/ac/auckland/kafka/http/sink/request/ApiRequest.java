@@ -13,23 +13,19 @@ import java.util.Arrays;
 import java.util.List;
 
 
-public class ApiRequest implements Request{
+public class ApiRequest implements Request {
 
     public static final String REQUEST_HEADER_TRACE_ID_KEY = "X-B3-TraceId";
     public static final String REQUEST_HEADER_SPAN_ID_KEY = "X-B3-SpanId";
+    public static final String REQUEST_HEADER_INFO_KEY = "X-B3-Info";
     static final String REQUEST_HEADER_SAMPLED_KEY = "X-B3-Sampled";
     static final String REQUEST_HEADER_SAMPLED_VALUE = "Defer";
-
     static final String REQUEST_HEADER_KAFKA_TOPIC_KEY = "X-Kafka-Topic";
-    public static final String REQUEST_HEADER_INFO_KEY = "X-B3-Info" ;
     private final static String STREAM_ENCODING = "UTF-8";
-    private HttpURLConnection connection;
+    private static final List<Integer> CALLBACK_API_DOWN_HTTP_STATUS_CODE = Arrays.asList(502, 503, 504, 401, 403, 405, 406);
     private final Logger log = LoggerFactory.getLogger(this.getClass());
+    private HttpURLConnection connection;
     private KafkaRecord kafkaRecord;
-    private static final List<Integer> CALLBACK_API_DOWN_HTTP_STATUS_CODE = Arrays.asList(502,503,504,401,403,405,406);
-
-    private enum ResponseTypes {ERROR , SUCCESS}
-
 
     ApiRequest(HttpURLConnection connection, KafkaRecord kafkaRecord) {
         this.connection = connection;
@@ -39,8 +35,8 @@ public class ApiRequest implements Request{
     @Override
     public ApiRequest setHeaders(String headerString, String spanId, String separator) {
 
-        try{
-            if(headerString != null && headerString.trim().length() > 0 ) {
+        try {
+            if (headerString != null && headerString.trim().length() > 0) {
                 JsonObject headers = new JsonParser().parse(headerString).getAsJsonObject();
                 log.debug("Processing {} headers", headers.size());
                 for (String headerKey : headers.keySet()) {
@@ -48,7 +44,7 @@ public class ApiRequest implements Request{
                     connection.setRequestProperty(headerKey, headers.get(headerKey).getAsString());
                 }
             }
-        }catch(JsonSyntaxException ex){
+        } catch (JsonSyntaxException ex) {
             setNonJsonHeaders(headerString, separator);
         }
         addB3Header(spanId);
@@ -57,48 +53,48 @@ public class ApiRequest implements Request{
         return this;
     }
 
-    private void setNonJsonHeaders(String headers, String separator){
+    private void setNonJsonHeaders(String headers, String separator) {
         log.debug("Processing Non json headers with separator: {} ", separator);
         for (String headerKeyValue : headers.split(separator)) {
             if (headerKeyValue.contains(":")) {
                 String key = headerKeyValue.split(":")[0];
                 String value = headerKeyValue.split(":")[1];
-                log.debug("Setting header property: {}",key);
+                log.debug("Setting header property: {}", key);
                 connection.setRequestProperty(key, value);
             }
         }
     }
 
-
     private void addTopicHeader() {
-        log.debug("Adding topic header: {} = {} ",REQUEST_HEADER_KAFKA_TOPIC_KEY, kafkaRecord.getTopic());
+        log.debug("Adding topic header: {} = {} ", REQUEST_HEADER_KAFKA_TOPIC_KEY, kafkaRecord.getTopic());
         connection.setRequestProperty(REQUEST_HEADER_KAFKA_TOPIC_KEY, kafkaRecord.getTopic());
     }
 
     private void addB3Header(String traceId) {
         log.debug("Adding B3 headers");
-        connection.setRequestProperty(REQUEST_HEADER_TRACE_ID_KEY,traceId );
-        connection.setRequestProperty(REQUEST_HEADER_SPAN_ID_KEY,traceId );
-        connection.setRequestProperty(REQUEST_HEADER_SAMPLED_KEY,REQUEST_HEADER_SAMPLED_VALUE );
+        connection.setRequestProperty(REQUEST_HEADER_TRACE_ID_KEY, traceId);
+        connection.setRequestProperty(REQUEST_HEADER_SPAN_ID_KEY, traceId);
+        connection.setRequestProperty(REQUEST_HEADER_SAMPLED_KEY, REQUEST_HEADER_SAMPLED_VALUE);
     }
+
     private void addInfoHeader() {
         String info = "topic=" + kafkaRecord.getTopic() + "|partition=" + kafkaRecord.getPartition()
                 + "|offset=" + kafkaRecord.getOffset();
-        log.debug("Adding info header: {} = {} ",REQUEST_HEADER_INFO_KEY, info);
+        log.debug("Adding info header: {} = {} ", REQUEST_HEADER_INFO_KEY, info);
         connection.setRequestProperty(REQUEST_HEADER_INFO_KEY, info);
     }
 
     @Override
     public void sendPayload(String payload) {
-        try(OutputStreamWriter writer = new OutputStreamWriter(connection.getOutputStream(), STREAM_ENCODING)){
+        try (OutputStreamWriter writer = new OutputStreamWriter(connection.getOutputStream(), STREAM_ENCODING)) {
             writer.write(payload);
             writer.flush();
             writer.close();
             log.info("Submitted request: url={} payload={}", connection.getURL(), payload);
             processResponse();
-        }catch (ApiResponseErrorException e) {
+        } catch (ApiResponseErrorException e) {
             throw e;
-        }catch (Exception e) {
+        } catch (Exception e) {
             throw new ApiRequestErrorException(e.getLocalizedMessage(), kafkaRecord);
         } finally {
             connection.disconnect();
@@ -111,8 +107,8 @@ public class ApiRequest implements Request{
             log.info("Response Status: {}", statusCode);
             RetryIndicator retryIndicator = getResponseIndicator();
             log.info("Retry Indicator: {}", retryIndicator);
-            if(retryIndicator == RetryIndicator.UNKNOWN
-                    && CALLBACK_API_DOWN_HTTP_STATUS_CODE.contains(statusCode)){
+            if (retryIndicator == RetryIndicator.UNKNOWN
+                    && CALLBACK_API_DOWN_HTTP_STATUS_CODE.contains(statusCode)) {
                 throw new ApiRequestErrorException("Unable to connect to callback API: "
                         + " received status: " + statusCode, kafkaRecord);
             } else if (retryIndicator.shouldRetry) {
@@ -120,7 +116,7 @@ public class ApiRequest implements Request{
             }
 
         } catch (IOException e) {
-            log.warn("Error checking if Send Request was Successful.",e.getMessage());
+            log.warn("Error checking if Send Request was Successful. {}", e.getMessage());
             throw new ApiResponseErrorException(e.getLocalizedMessage());
         }
     }
@@ -128,11 +124,10 @@ public class ApiRequest implements Request{
     private RetryIndicator getResponseIndicator() {
         try {
             JsonObject response = new JsonParser().parse(getResponse()).getAsJsonObject();
-            return response.get("retry").getAsBoolean()? RetryIndicator.RETRY : RetryIndicator.NO_RETRY ;
-        }catch (JsonSyntaxException | IllegalStateException exception){
-            throw  exception;
-        }
-        catch (Exception ex){
+            return response.get("retry").getAsBoolean() ? RetryIndicator.RETRY : RetryIndicator.NO_RETRY;
+        } catch (JsonSyntaxException | IllegalStateException exception) {
+            throw exception;
+        } catch (Exception ex) {
             return RetryIndicator.UNKNOWN;
         }
     }
@@ -164,4 +159,6 @@ public class ApiRequest implements Request{
             return response;
         }
     }
+
+    private enum ResponseTypes {ERROR, SUCCESS}
 }

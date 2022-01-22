@@ -26,7 +26,7 @@ public class DropMessageHandlerTest {
 
         DropMessageHandler handler = new DropMessageHandler(sinkTaskContext);
 
-        Assertions.assertDoesNotThrow(() -> handler.handel(new ApiResponseErrorException("Error")));
+        Assertions.assertDoesNotThrow(() -> handler.handle(new ApiResponseErrorException("Error")));
 
         verify(sinkTaskContext, times(1)).requestCommit();
     }

@@ -26,7 +26,7 @@ public class ProgressiveBackoffDropHandler implements ExceptionHandler {
     }
 
     @Override
-    public void handel(CallBackApiException e) {
+    public void handle(CallBackApiException e) {
         if (retryIndex >= maxRetries) {
             log.error("Progressive back-off drop Strategy: Dropping the message {} after {} retries.",e.getRecord(),maxRetries);
             retryIndex = 0;

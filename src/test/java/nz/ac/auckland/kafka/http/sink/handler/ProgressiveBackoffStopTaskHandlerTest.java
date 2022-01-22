@@ -73,7 +73,7 @@ class ProgressiveBackoffStopTaskHandlerTest {
 
 
     private void invokeHandel(ExceptionHandler handler){
-        handler.handel(new ApiResponseErrorException("Error"));
+        handler.handle(new ApiResponseErrorException("Error"));
     }
 
 }

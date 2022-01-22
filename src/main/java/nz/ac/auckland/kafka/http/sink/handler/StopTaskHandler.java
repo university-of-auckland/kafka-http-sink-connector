@@ -13,7 +13,7 @@ public class StopTaskHandler implements ExceptionHandler{
     }
 
     @Override
-    public void handel(CallBackApiException e) {
+    public void handle(CallBackApiException e) {
         log.error("Stop task Strategy: Stopping task. \n Error:{} \n Errored record: {}" , e.getMessage(),e.getRecord());
         throw new ConnectException(e);
     }

@@ -104,9 +104,9 @@ public class ApiRequestInvoker {
             responseExceptionHandler.reset();
             requestExceptionHandler.reset();
         }catch (ApiResponseErrorException e) {
-            responseExceptionHandler.handel(e);
+            responseExceptionHandler.handle(e);
         }catch (ApiRequestErrorException e){
-            requestExceptionHandler.handel(e);
+            requestExceptionHandler.handle(e);
         }
     }
 

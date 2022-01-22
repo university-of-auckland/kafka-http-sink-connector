@@ -5,7 +5,7 @@ import nz.ac.auckland.kafka.http.sink.request.CallBackApiException;
 
 public interface ExceptionHandler {
 
-    void handel(CallBackApiException e);
+    void handle(CallBackApiException e);
 
     /**
      * Reset the handlers retry index if present

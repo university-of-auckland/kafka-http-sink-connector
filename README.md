@@ -61,10 +61,13 @@ One can opt for one of the below exception strategies to retry the failed callba
 - DROP_MESSAGE:
   <br> Drop the message and move to processing the next message in que. Failures from the callback request are ignored.
   <br> Use this strategy if you do not care about loosing messages.   
-  
+
 - STOP_TASK:  
   <br> Immediately stop the connector. **No new messages in the que would be consumed.** `The connector would have to be manually restarted so that it starts to consume messages again.`
   <br> Use this strategy if you do not want to loose any message. The application is continuously monitored for any errors and connector restart can be manually triggered.
+
+- DEAD_LETTER_QUEUE
+  <br> Send the message to the dead letter queue.
      
 > - If the response does not contain a retry indicator the connector would assume retry= true and will retry the message as per the back-off strategy.
 > - If their is no retry indicator and the HTTP status is one of the below the connector will retry the message as per the back-off strategy and STOP if not successful.

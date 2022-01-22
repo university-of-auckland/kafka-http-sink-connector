@@ -27,7 +27,7 @@ public class StopTaskHandlerTest {
 
         StopTaskHandler handler = new StopTaskHandler();
 
-        Assertions.assertThrows(ConnectException.class, () -> handler.handel(new ApiResponseErrorException("Error")));
+        Assertions.assertThrows(ConnectException.class, () -> handler.handle(new ApiResponseErrorException("Error")));
 
         verify(sinkTaskContext, times(0)).requestCommit();
     }
