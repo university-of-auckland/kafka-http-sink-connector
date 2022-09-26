@@ -12,6 +12,8 @@ import java.net.HttpURLConnection;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.ws.rs.core.Response;
+
 
 public class ApiRequest implements Request{
 
@@ -109,14 +111,16 @@ public class ApiRequest implements Request{
         try {
             int statusCode = connection.getResponseCode();
             log.info("Response Status: {}", statusCode);
-            RetryIndicator retryIndicator = getResponseIndicator();
-            log.info("Retry Indicator: {}", retryIndicator);
-            if(retryIndicator == RetryIndicator.UNKNOWN
-                    && CALLBACK_API_DOWN_HTTP_STATUS_CODE.contains(statusCode)){
-                throw new ApiRequestErrorException("Unable to connect to callback API: "
-                        + " received status: " + statusCode, kafkaRecord);
-            } else if (retryIndicator.shouldRetry) {
-                throw new ApiResponseErrorException("Received response retry=true", kafkaRecord);
+            if(Response.Status.Family.familyOf(statusCode) != Response.Status.Family.SUCCESSFUL){
+                RetryIndicator retryIndicator = getResponseIndicator();
+                log.info("Retry Indicator: {}", retryIndicator);
+                if(retryIndicator == RetryIndicator.UNKNOWN
+                        && CALLBACK_API_DOWN_HTTP_STATUS_CODE.contains(statusCode)){
+                    throw new ApiRequestErrorException("Unable to connect to callback API: "
+                            + " received status: " + statusCode, kafkaRecord);
+                } else if (retryIndicator.shouldRetry) {
+                    throw new ApiResponseErrorException("Received response retry=true", kafkaRecord);
+                }
             }
 
         } catch (IOException e) {
